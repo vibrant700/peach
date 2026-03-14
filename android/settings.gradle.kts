@@ -28,4 +28,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "智桃科研"
 include(":app")
-include(":app")
