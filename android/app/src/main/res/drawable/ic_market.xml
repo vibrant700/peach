@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 简化为折线趋势箭头与柱形 -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M5,18 L7,18 L7,12 L5,12 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M9,18 L11,18 L11,10 L9,10 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M13,18 L15,18 L15,14 L13,14 Z" />
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="2" android:strokeLineCap="round" android:pathData="M5,17 L12,10 L19,13" />
+</vector>

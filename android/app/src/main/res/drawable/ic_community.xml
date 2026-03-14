@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 简化为聊天气泡图标 -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M4,5 L20,5 L20,16 L12,16 L8,19 L8,16 L4,16 Z" />
+</vector>

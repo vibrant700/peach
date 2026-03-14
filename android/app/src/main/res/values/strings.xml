@@ -1,0 +1,53 @@
+<resources>
+    <string name="app_name">智桃科研</string>
+
+    <string name="title_app">智桃科研</string>
+
+    <string name="feature_identify_title">慧眼识桃</string>
+    <string name="feature_identify_subtitle">智能识别桃品种</string>
+    <string name="feature_identify_desc">识桃功能</string>
+
+    <string name="feature_taobao_title">桃宝对话</string>
+    <string name="feature_taobao_subtitle">对话Deepseek</string>
+    <string name="feature_taobao_desc">桃宝功能</string>
+
+    <string name="feature_community_title">桃农社区</string>
+    <string name="feature_community_subtitle">交流种植经验</string>
+    <string name="feature_community_desc">桃农社区</string>
+
+    <string name="feature_market_title">桃源工坊</string>
+    <string name="feature_market_subtitle">文创设计生成</string>
+    <string name="feature_market_desc">桃源工坊</string>
+
+    <string name="footer_text">© 2025 慧满桃乡 · 智慧农业</string>
+
+    <string name="function_dev">%1$s功能正在开发中...</string>
+    <string name="taobao_ai_title">桃宝 AI</string>
+    <string name="hint_input">请输入问题...</string>
+    <string name="btn_send">发送</string>
+    <string name="btn_back">返回首页</string>
+    <string name="mode_general">通用咨询</string>
+    <string name="mode_agro">农业问答</string>
+    <string name="mode_recommend">导购建议</string>
+    <string name="ai_error">服务不可用，请确认本机已启动 DeepSeek 模型。</string>
+    <string name="ai_welcome">你好！我是您的智能助手“桃宝”。\n无论是种植技术、病虫害防治，还是市场行情，我都能为您解答。\n请问有什么可以帮您？</string>
+    <string name="prompt_general">你是一个亲和的智能助手，回答简洁准确。</string>
+    <string name="prompt_agro">你是农业专家，聚焦桃树栽培、病虫害防治、品种与市场，给出实操建议与风险提示。</string>
+    <string name="prompt_recommend">你是导购顾问，结合需求给出购买建议、对比与性价比分析，并说明理由。</string>
+    <string name="ai_base_url">http://10.0.2.2:11434</string>
+    <string name="ai_backend_type">ollama</string>
+    <string name="ai_model">deepseek-r1:latest</string>
+    <string name="ai_api_key"></string>
+
+    <!-- 功能图标描述 -->
+    <string name="function_icon_desc">功能图标</string>
+
+    <!-- 新增功能 -->
+    <string name="feature_irrigation_title">仓库管理</string>
+    <string name="feature_irrigation_subtitle">农产品仓储管理</string>
+    <string name="feature_irrigation_desc">仓库管理功能</string>
+
+    <string name="feature_price_title">碳汇市场</string>
+    <string name="feature_price_subtitle">碳汇交易市场</string>
+    <string name="feature_price_desc">碳汇市场功能</string>
+</resources>

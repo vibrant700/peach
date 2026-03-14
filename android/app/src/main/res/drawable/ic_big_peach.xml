@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    
+    <!-- 左后方的桃子 -->
+    <group android:translateX="-5" android:translateY="2" android:scaleX="0.8" android:scaleY="0.8">
+        <path
+            android:fillColor="#FFCDD2"
+            android:pathData="M12,21 C7,21 3,15 3,9 C3,5 7,2 12,4 C17,2 21,5 21,9 C21,15 17,21 12,21 Z" />
+    </group>
+
+    <!-- 右后方的桃子 -->
+    <group android:translateX="5" android:translateY="1" android:scaleX="0.85" android:scaleY="0.85">
+        <path
+            android:fillColor="#EF9A9A"
+            android:pathData="M12,21 C7,21 3,15 3,9 C3,5 7,2 12,4 C17,2 21,5 21,9 C21,15 17,21 12,21 Z" />
+    </group>
+
+    <!-- 中间的大圆桃子 (更圆润饱满) -->
+    <path
+        android:fillColor="#FF8A80"
+        android:pathData="M12,22 C6,22 2,16 2,9.5 C2,5 6.5,2 12,3.5 C17.5,2 22,5 22,9.5 C22,16 18,22 12,22 Z" />
+        
+    <!-- 右边大叶子 -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M13,3.5 Q17,-1 21,2 Q18,6 13,4.5 Z" />
+    
+    <!-- 左边小叶子 -->
+    <path
+        android:fillColor="#81C784"
+        android:pathData="M11,4 Q7,0 5,3 Q8,5 11,4.5 Z" />
+</vector>

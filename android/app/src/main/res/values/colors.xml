@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 卡片颜色 - 更鲜艳的配色 -->
+    <color name="color_card_identify">#FF9800</color>
+    <color name="color_card_identify_dark">#F57C00</color>
+    <color name="color_card_taobao">#4CAF50</color>
+    <color name="color_card_taobao_dark">#388E3C</color>
+    <color name="color_card_community">#2196F3</color>
+    <color name="color_card_community_dark">#1976D2</color>
+    <color name="color_card_market">#9C27B0</color>
+    <color name="color_card_market_dark">#7B1FA2</color>
+    <color name="color_card_football">#FF5722</color>
+    <color name="color_card_football_dark">#E64A19</color>
+
+    <color name="purple_500">#FF6200EE</color>
+    <color name="gray">#FF9E9E9E</color>
+    <color name="light_purple">#33FF6200</color>
+    <color name="background">#FFF5F5F5</color>
+    <color name="card_background">#FFFFFFFF</color>
+    <color name="text_primary">#FF212121</color>
+    <color name="text_hint">#FF757575</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="green">#FF4CAF50</color>
+    <color name="orange">#FFFF9800</color>
+    <color name="red">#FFF44336</color>
+    <color name="purple_700">#FF3700B3</color>
+
+    <!-- 新增：卡片阴影颜色 -->
+    <color name="card_shadow_light">#1A000000</color>
+    <color name="card_shadow_medium">#33000000</color>
+
+</resources>

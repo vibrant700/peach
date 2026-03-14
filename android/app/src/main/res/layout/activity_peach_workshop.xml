@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:gravity="center_horizontal">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="30dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="桃源创艺"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#E91E63" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="把思想汇成图像"
+                android:textSize="14sp"
+                android:textColor="#9E9E9E"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="4dp"/>
+        </LinearLayout>
+
+        <!-- Input Area -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="#FFF0F5">
+
+            <EditText
+                android:id="@+id/et_prompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="5"
+                android:gravity="top"
+                android:padding="16dp"
+                android:background="@null"
+                android:hint="请给我一只透明的玻璃杯，杯中放有几片新鲜的桃子切片，杯身上印有淡桃色的桃子图案，清新而自然..."
+                android:textSize="14sp"
+                android:textColor="#333333" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Generate Button -->
+        <Button
+            android:id="@+id/btn_generate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="生成图片"
+            android:textSize="16sp"
+            android:textColor="@color/white"
+            android:backgroundTint="#FF69B4"
+            android:paddingHorizontal="40dp"
+            android:paddingVertical="12dp"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="30dp"
+            app:cornerRadius="25dp" />
+
+        <!-- Loading Indicator -->
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Result Image -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp"
+            android:visibility="visible">
+
+            <ImageView
+                android:id="@+id/iv_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:minHeight="300dp"
+                android:background="#F5F5F5" />
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>
