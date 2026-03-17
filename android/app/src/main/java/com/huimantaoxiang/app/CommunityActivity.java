@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ImageButton;
@@ -26,11 +27,13 @@ public class CommunityActivity extends AppCompatActivity {
     private EditText etPostContent;
     private Button btnPost;
     private RecyclerView rvPosts;
-    private TextView tvEmptyHint;
-
-    private ImageButton btnBack;
-
+    private View emptyStateContainer;
+    private TextView tvPostCount;
+    private TextView tvMemberCount;
+    private TextView tvPostCountLabel;
+    private LinearLayout btnBack;
     private ImageButton btnRefresh;
+
     // 数据
     private List<CommunityPost> postList = new ArrayList<>();
     private CommunityAdapter adapter;
@@ -39,16 +42,7 @@ public class CommunityActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 启用全屏
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_community);
-
-        // 处理系统栏适配
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -75,9 +69,13 @@ public class CommunityActivity extends AppCompatActivity {
         etPostContent = findViewById(R.id.et_post_content);
         btnPost = findViewById(R.id.btn_post);
         rvPosts = findViewById(R.id.rv_posts);
-        tvEmptyHint = findViewById(R.id.tv_empty_hint);
+        emptyStateContainer = findViewById(R.id.empty_state_container);
+        tvPostCount = findViewById(R.id.tvPostCount);
+        tvMemberCount = findViewById(R.id.tvMemberCount);
+        tvPostCountLabel = findViewById(R.id.tv_post_count_label);
         btnBack = findViewById(R.id.btn_back);
         btnRefresh = findViewById(R.id.btn_refresh);
+
         // 设置 RecyclerView
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         rvPosts.setLayoutManager(layoutManager);
@@ -99,9 +97,12 @@ public class CommunityActivity extends AppCompatActivity {
         // 更新适配器
         adapter.notifyDataSetChanged();
 
+        // 更新统计数据
+        updateStats();
+
         // 如果有数据，隐藏空状态提示
         if (!postList.isEmpty()) {
-            tvEmptyHint.setVisibility(View.GONE);
+            emptyStateContainer.setVisibility(View.GONE);
         }
     }
 
@@ -134,8 +135,11 @@ public class CommunityActivity extends AppCompatActivity {
             // 清空输入框
             etPostContent.setText("");
 
+            // 更新统计数据
+            updateStats();
+
             // 隐藏空状态提示
-            tvEmptyHint.setVisibility(View.GONE);
+            emptyStateContainer.setVisibility(View.GONE);
 
             Toast.makeText(CommunityActivity.this, "发布成功", Toast.LENGTH_SHORT).show();
         });
@@ -188,11 +192,25 @@ public class CommunityActivity extends AppCompatActivity {
 
             // 检查空状态
             if (postList.isEmpty()) {
-                tvEmptyHint.setVisibility(View.VISIBLE);
+                emptyStateContainer.setVisibility(View.VISIBLE);
             } else {
-                tvEmptyHint.setVisibility(View.GONE);
+                emptyStateContainer.setVisibility(View.GONE);
             }
+
+            // 更新统计数据
+            updateStats();
         }, 1000); // 延迟1秒模拟网络请求
+    }
+
+    /**
+     * 更新统计数据
+     */
+    private void updateStats() {
+        int postCount = postList.size();
+        tvPostCount.setText(String.valueOf(postCount));
+        tvPostCountLabel.setText("共 " + postCount + " 条");
+        // 成员数量可以设为固定值或从服务器获取
+        tvMemberCount.setText("128");
     }
 
 }

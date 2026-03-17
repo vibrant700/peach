@@ -29,16 +29,36 @@
                 android:gravity="center_vertical"
                 android:layout_marginBottom="16dp">
 
-                <ImageView
+                <LinearLayout
                     android:id="@+id/btnBack"
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_back_white"
-                    android:padding="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/bg_back_button"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="8dp"
                     android:clickable="true"
-                    android:focusable="true"
-                    android:contentDescription="返回" />
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_back_white"
+                        android:contentDescription="返回"
+                        android:tint="@color/white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="首页"
+                        android:textSize="15sp"
+                        android:textColor="@color/white"
+                        android:textStyle="bold"
+                        android:layout_marginStart="6dp" />
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="0dp"

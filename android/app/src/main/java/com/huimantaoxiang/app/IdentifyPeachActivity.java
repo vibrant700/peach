@@ -5,13 +5,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -20,17 +18,17 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.PickVisualMediaRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import org.json.JSONObject;
-import org.json.JSONArray;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -43,30 +41,27 @@ import java.util.Map;
 public class IdentifyPeachActivity extends AppCompatActivity {
 
     // UI组件 - 简洁版本
-    private ImageButton btnBack;
+    private LinearLayout btnBack;
     private ImageView ivPreview;
     private ImageView ivResult;        // 新增：识别结果图片
-    private TextView tvUploadHint;
     private Button btnUpload;          // 改为Button，不是View
     private Spinner spinnerModel;
     private Button btnIdentify;        // 改为Button，不是View
     private LinearLayout llResults;
-    private TextView tvEmptyResult;
     private ScrollView scrollResults;
     private ProgressBar progressLoading;  // 新增：加载进度条
     private LinearLayout layoutLoading;   // 新增：加载布局
     private TextView tvLoadingHint;       // 新增：加载提示文本
+    private LinearLayout emptyStateContainer; // 空状态容器
+    private TextView tvEmptyResult;
 
     // 数据
     private Bitmap selectedImage;
     private Bitmap resultImage;        // 新增：识别结果图片
     private String selectedModel = "YOLOv5标准模型";
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_IMAGE_PICK = 2;
+    private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
 
     // 服务器配置
-    // private static final String SERVER_URL = "http://192.168.0.101:8081/upload";
-    // 模拟器使用 10.0.2.2 访问宿主机
     private static final String SERVER_URL = "http://10.0.2.2:8081/upload";
 
     // 模拟数据
@@ -78,16 +73,59 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         setContentView(R.layout.activity_identify_peach);
 
         initViews();
+        initImagePicker();
         setupListeners();
         setupSpinner();
         initMockData();
+    }
+
+    private void initImagePicker() {
+        pickMediaLauncher = registerForActivityResult(
+                new ActivityResultContracts.PickVisualMedia(),
+                uri -> {
+                    if (uri == null) {
+                        Toast.makeText(this, "未选择图片", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    loadSelectedImage(uri);
+                }
+        );
+    }
+
+    private void loadSelectedImage(Uri uri) {
+        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+            if (inputStream == null) {
+                Toast.makeText(this, "无法读取图片", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            if (bitmap == null) {
+                Toast.makeText(this, "图片解析失败", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            selectedImage = bitmap;
+            ivPreview.setImageBitmap(bitmap);
+            ivPreview.setAlpha(1.0f);
+
+            resultImage = null;
+            ivResult.setImageResource(R.drawable.ic_upload);
+            ivResult.setAlpha(0.5f);
+
+            llResults.removeAllViews();
+            scrollResults.setVisibility(View.GONE);
+            emptyStateContainer.setVisibility(View.VISIBLE);
+            tvEmptyResult.setText("📸 已选择图片，点击开始识别");
+        } catch (Exception e) {
+            Log.e("IdentifyPeach", "loadSelectedImage error: " + e.getMessage(), e);
+            Toast.makeText(this, "读取图片失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void initViews() {
         btnBack = findViewById(R.id.btn_back);
         ivPreview = findViewById(R.id.iv_preview);
         ivResult = findViewById(R.id.iv_result);              // 新增：初始化识别结果图片
-        tvUploadHint = findViewById(R.id.tv_upload_hint);
         btnUpload = findViewById(R.id.btn_upload);            // Button，不是View
         spinnerModel = findViewById(R.id.spinner_model);
         btnIdentify = findViewById(R.id.btn_identify);        // Button，不是View
@@ -97,6 +135,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         progressLoading = findViewById(R.id.progress_loading);  // 新增
         layoutLoading = findViewById(R.id.layout_loading);      // 新增
         tvLoadingHint = findViewById(R.id.tv_loading_hint);     // 新增
+        emptyStateContainer = findViewById(R.id.empty_state_container); // 新增
     }
 
     private void setupSpinner() {
@@ -132,22 +171,20 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         // 返回按钮 - 先检查是否为空
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> finish());
-        } else {
-            Log.e("IdentifyPeachActivity", "btnBack is null!");
         }
 
-        // 上传按钮 - 添加空值检查
         if (btnUpload != null) {
             btnUpload.setOnClickListener(v -> {
-                // 简单实现：直接打开相册
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_IMAGE_PICK);
+                if (pickMediaLauncher == null) {
+                    Toast.makeText(this, "图片选择器未初始化", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                pickMediaLauncher.launch(
+                        new PickVisualMediaRequest.Builder()
+                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                                .build()
+                );
             });
-        } else {
-            Log.e("IdentifyPeachActivity", "btnUpload is null!");
-            // 或者使用Toast提示用户
-            Toast.makeText(this, "界面加载异常，请重启应用", Toast.LENGTH_SHORT).show();
         }
 
         // 识别按钮 - 添加空值检查
@@ -159,27 +196,6 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                 }
                 identifyPeach();
             });
-        } else {
-            Log.e("IdentifyPeachActivity", "btnIdentify is null!");
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK && requestCode == REQUEST_IMAGE_PICK && data != null) {
-            Uri imageUri = data.getData();
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                selectedImage = BitmapFactory.decodeStream(inputStream);
-                ivPreview.setImageBitmap(selectedImage);
-                tvUploadHint.setText("图片已选择");
-                tvUploadHint.setTextColor(ContextCompat.getColor(this, R.color.color_card_identify));
-            } catch (Exception e) {
-                e.printStackTrace();
-                Toast.makeText(this, "图片加载失败", Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -198,6 +214,24 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                 String response = uploadImageToServer(selectedImage);
 
                 updateLoadingHint("正在识别中...");
+
+                // 检查服务器返回的错误信息
+                if (response.contains("\"msg\":\"error\"") || response.contains("\"error\":")) {
+                    runOnUiThread(() -> {
+                        hideLoading();
+                        btnIdentify.setText("重新识别");
+                        btnIdentify.setEnabled(true);
+                        try {
+                            JSONObject errorJson = new JSONObject(response);
+                            String errorMsg = errorJson.optString("error", "服务器返回错误");
+                            Toast.makeText(this, "识别失败：" + errorMsg, Toast.LENGTH_LONG).show();
+                        } catch (Exception e) {
+                            Toast.makeText(this, "识别失败：服务器错误\n" + response, Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    return;
+                }
+
                 JSONObject jsonResponse = new JSONObject(response);
 
                 // 获取识别结果的图片URL
@@ -228,7 +262,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
 
                         // 显示识别结果
                         llResults.removeAllViews();
-                        tvEmptyResult.setVisibility(View.GONE);
+                        emptyStateContainer.setVisibility(View.GONE);
                         scrollResults.setVisibility(View.VISIBLE);
 
                         // 1. 尝试匹配模拟数据（精确或模糊）
@@ -277,8 +311,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                             }
                         }
 
-                        btnIdentify.setText("重新识别");
-                        btnIdentify.setEnabled(true);
+                        setSuccessState();
 
                         Toast.makeText(this, "识别完成！", Toast.LENGTH_SHORT).show();
                     });
@@ -306,10 +339,16 @@ public class IdentifyPeachActivity extends AppCompatActivity {
      * 显示加载进度
      */
     private void showLoading(String hint) {
-        tvEmptyResult.setVisibility(View.GONE);
+        emptyStateContainer.setVisibility(View.GONE);
         scrollResults.setVisibility(View.GONE);
         layoutLoading.setVisibility(View.VISIBLE);
         tvLoadingHint.setText(hint);
+
+        // 更新按钮状态为加载中
+        if (btnIdentify != null) {
+            btnIdentify.setText("识别中...");
+            btnIdentify.setEnabled(false);
+        }
     }
 
     /**
@@ -328,6 +367,22 @@ public class IdentifyPeachActivity extends AppCompatActivity {
      */
     private void hideLoading() {
         layoutLoading.setVisibility(View.GONE);
+
+        // 恢复按钮状态
+        if (btnIdentify != null) {
+            btnIdentify.setText("开始识别");
+            btnIdentify.setEnabled(true);
+        }
+    }
+
+    /**
+     * 设置识别成功状态
+     */
+    private void setSuccessState() {
+        if (btnIdentify != null) {
+            btnIdentify.setText("识别完成");
+            btnIdentify.setEnabled(true);
+        }
     }
 
     /**
@@ -409,6 +464,10 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                 String.format("重量：%dg，果径：%dmm", result.weight, result.diameter), (int) ((float) result.weight / 300 * 100));
         addResultCard("光照情况", getLightLevel(result.lightScore),
                 String.format("光照评分：%d/100", result.lightScore), result.lightScore);
+
+        // 添加加工建议
+        String[] processingRecommendation = getProcessingRecommendation(result);
+        addProcessingCard(processingRecommendation[0], processingRecommendation[1], processingRecommendation[2]);
     }
 
     private String getMaturityLevel(int colorPercentage) {
@@ -427,6 +486,116 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         if (score >= 90) return "光照充足";
         else if (score >= 70) return "光照良好";
         else return "光照一般";
+    }
+
+    /**
+     * 根据桃子指标判断适合的加工方式
+     * @param result 桃子检测结果
+     * @return [加工类型, 适合原因, 推荐指数]
+     */
+    private String[] getProcessingRecommendation(PeachResult result) {
+        String processingType;
+        String reason;
+        String recommendation;
+        int score = 0;
+
+        // 综合评分计算
+        float sweetness = result.sweetness;
+        int maturity = result.colorPercentage;
+        int weight = result.weight;
+        String grade = result.grade;
+
+        // 判断逻辑
+        if (sweetness >= 12.0 && maturity >= 70 && weight >= 200) {
+            // 高甜度+高成熟度+大果 → 适合做桃干
+            processingType = "🍑 桃干加工";
+            reason = "高甜度且果肉厚实，脱水后口感浓郁，糖分保存率高";
+            score = 95;
+            recommendation = "强烈推荐";
+        } else if (sweetness >= 11.0 && maturity >= 80 && grade.equals("特级果")) {
+            // 高甜度+完全成熟+特级果 → 适合做果脯
+            processingType = "🍬 糖渍果脯";
+            reason = "完全成熟的特级果，糖渍后色泽诱人，口感软糯香甜";
+            score = 92;
+            recommendation = "强烈推荐";
+        } else if (sweetness >= 10.0 && maturity >= 60) {
+            // 中高甜度+基本成熟 → 适合做桃酒/桃醋
+            if (result.lightScore >= 80) {
+                processingType = "🍷 桃子酒";
+                reason = "糖度适中且光照充足，发酵后酒香浓郁，口感醇厚";
+                score = 88;
+                recommendation = "推荐";
+            } else {
+                processingType = "🥫 桃子醋";
+                reason = "酸甜适中，适合酿制果醋，营养价值高";
+                score = 85;
+                recommendation = "推荐";
+            }
+        } else if (maturity >= 85 && weight >= 180) {
+            // 高成熟度+中大果 → 适合做桃汁
+            processingType = "🧃 鲜榨桃汁";
+            reason = "完全成熟且汁水丰富，出汁率高，口感新鲜香甜";
+            score = 90;
+            recommendation = "推荐";
+        } else if (weight >= 220 && grade.equals("特级果")) {
+            // 大果+特级果 → 适合做罐头
+            processingType = "🥫 糖水罐头";
+            reason = "特级大果，果形完整，制作罐头卖相佳，口感脆嫩";
+            score = 87;
+            recommendation = "推荐";
+        } else if (sweetness >= 13.0 && maturity >= 75) {
+            // 超高甜度 → 适合做桃酱
+            processingType = "🍯 桃子果酱";
+            reason = "超高甜度，制作果酱时无需额外加糖，口感纯正";
+            score = 93;
+            recommendation = "强烈推荐";
+        } else if (maturity >= 80) {
+            // 高成熟度 → 适合做冷冻桃肉
+            processingType = "❄️ 冷冻桃肉";
+            reason = "完全成熟，冷冻后保持鲜嫩口感，适合烘焙和甜品";
+            score = 82;
+            recommendation = "较适合";
+        } else {
+            // 其他情况 → 适合做综合制品
+            processingType = "🍧 综合加工";
+            reason = "各项指标均衡，可制作桃子派、桃子冰淇淋等综合制品";
+            score = 78;
+            recommendation = "较适合";
+        }
+
+        return new String[]{processingType, reason, recommendation + " (匹配度" + score + "/100)"};
+    }
+
+    /**
+     * 添加加工建议卡片
+     */
+    private void addProcessingCard(String type, String reason, String recommendation) {
+        View cardView = LayoutInflater.from(this).inflate(R.layout.item_peach_result, llResults, false);
+
+        TextView tvTitle = cardView.findViewById(R.id.tv_item_title);
+        TextView tvValue = cardView.findViewById(R.id.tv_item_value);
+        TextView tvDesc = cardView.findViewById(R.id.tv_item_description);
+        ProgressBar progressBar = cardView.findViewById(R.id.pb_item_progress);
+
+        tvTitle.setText("💡 加工建议");
+        tvValue.setText(type);
+        tvDesc.setText(reason + "\n" + recommendation);
+
+        // 设置进度条颜色（加工建议用不同颜色）
+        if (progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
+            // 从recommendation中提取分数
+            int score = 75; // 默认值
+            try {
+                String scoreStr = recommendation.substring(recommendation.indexOf("匹配度") + 3, recommendation.indexOf("/100"));
+                score = Integer.parseInt(scoreStr);
+            } catch (Exception e) {
+                // 解析失败使用默认值
+            }
+            progressBar.setProgress(score);
+        }
+
+        llResults.addView(cardView);
     }
 
     private void addResultCard(String title, String value, String description, int progress) {

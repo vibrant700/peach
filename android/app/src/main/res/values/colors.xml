@@ -32,4 +32,25 @@
     <color name="card_shadow_light">#1A000000</color>
     <color name="card_shadow_medium">#33000000</color>
 
+    <!-- 优化后的配色方案 - 农业质感 -->
+    <color name="inventory_card_bg">#F9F5FF</color> <!-- 浅薰衣草紫 -->
+    <color name="peach_pink">#FF8A9B</color>       <!-- 桃红 -->
+    <color name="seed_yellow">#FFD166</color>     <!-- 种子黄 -->
+    <color name="branch_brown">#D4A373</color>    <!-- 枝干棕 -->
+    <color name="nectarine_orange">#FFAE42</color> <!-- 油桃橙 -->
+    <color name="yellow_peach_gold">#FFC857</color><!-- 黄桃金 -->
+    <color name="honeydew_pink">#FFB6C1</color>   <!-- 水蜜桃粉 -->
+    <color name="honeydew_green">#83E8B3</color>  <!-- 水蜜桃绿 -->
+
+    <!-- 辅助色 -->
+    <color name="light_peach_red">#FFE0E6</color>  <!-- 浅桃红 -->
+    <color name="light_pink_purple">#F9D7FF</color><!-- 淡粉紫 -->
+    <color name="lavender_purple">#F5F0FF</color>  <!-- 浅薰衣草紫 -->
+
+    <!-- 识桃页面专用色 -->
+    <color name="deep_purple_text">#7B2CBF</color>   <!-- 深紫文字 -->
+    <color name="light_purple_text">#C77DFF</color>  <!-- 浅紫文字 -->
+    <color name="peach_pink_primary">#FFB6C1</color>  <!-- 桃粉主色 -->
+    <color name="light_peach_bg">#F9D7FF</color>     <!-- 浅桃紫背景 -->
+
 </resources>

@@ -47,15 +47,30 @@ app.post('/upload', upload.single('file'), function(req, res, next) {
     let d0 = "";
 
     const spawn = require("child_process").spawn;
-    const result = spawn("cmd.exe", ["/s", "/c", `python ./yolov5-master/detect.py --weights ./yolov5-master/best.pt --source yolov5-master/data/images/${file.filename}`]);
+    const path = require("path");
+
+    // 使用绝对路径
+    const pythonPath = path.join(__dirname, "yolov5-master", ".venv", "Scripts", "python.exe");
+    const detectScript = path.join(__dirname, "yolov5-master", "detect.py");
+    const weightsPath = path.join(__dirname, "yolov5-master", "best.pt");
+    const sourcePath = path.join(__dirname, "yolov5-master", "data", "images", file.filename);
+
+    console.log("Python路径:", pythonPath);
+    console.log("检测脚本:", detectScript);
+    console.log("图片路径:", sourcePath);
+
+    // 直接调用Python，不通过cmd.exe
+    const result = spawn(pythonPath, [detectScript, "--weights", weightsPath, "--source", sourcePath], {
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
+    });
 
     result.stdout.on("data", (data) => {
-        d0 += data.toString();
+        d0 += data.toString('utf8');
     });
 
     let errorOutput = "";
     result.stderr.on("data", (data) => {
-        errorOutput += data.toString();
+        errorOutput += data.toString('utf8');
     });
 
     result.on("close", (code) => {

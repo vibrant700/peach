@@ -5,15 +5,17 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.bumptech.glide.Glide;
 
 import org.json.JSONObject;
 
@@ -30,8 +32,6 @@ import java.net.URL;
  * - 通过简单的聊天气泡形式展示用户和 AI 的对话
  */
 public class TaobaoAIActivity extends AppCompatActivity {
-    // 顶部模式选择下拉框
-    private Spinner spinnerMode;
     // 聊天消息容器（垂直线性布局，每条消息是一个 TextView 气泡）
     private LinearLayout messagesContainer;
     private android.widget.ScrollView scrollView;
@@ -41,6 +41,7 @@ public class TaobaoAIActivity extends AppCompatActivity {
     private Button sendBtn;
     // 调用模型时显示的进度条
     private ProgressBar progress;
+    private String currentMode;
 
     // 后端服务的基础地址（例如 http://10.0.2.2:11434 或云端地址）
     private String baseUrl;
@@ -56,13 +57,15 @@ public class TaobaoAIActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_taobao_ai);
 
-        spinnerMode = findViewById(R.id.spinner_mode);
         messagesContainer = findViewById(R.id.container_messages);
         scrollView = findViewById(R.id.scroll);
         input = findViewById(R.id.input_message);
         sendBtn = findViewById(R.id.btn_send);
         progress = findViewById(R.id.progress);
-        Button backBtn = findViewById(R.id.btn_back);
+        ImageView inputAvatar = findViewById(R.id.iv_ai_avatar);
+
+        LinearLayout backBtn = findViewById(R.id.btn_back);
+        View modeBtn = findViewById(R.id.btn_mode);
 
         // 从 BuildConfig 中读取在构建阶段写入的 AI 配置信息
         baseUrl = BuildConfig.AI_BASE_URL;
@@ -70,14 +73,30 @@ public class TaobaoAIActivity extends AppCompatActivity {
         modelName = BuildConfig.AI_MODEL;
         apiKey = BuildConfig.DEEPSEEK_API_KEY;
 
-        // 模式选择下拉框适配器：通用对话 / 农业助手 / 种植推荐
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, new String[]{
-                getString(R.string.mode_general),
-                getString(R.string.mode_agro),
-                getString(R.string.mode_recommend)
-        });
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerMode.setAdapter(adapter);
+        currentMode = getString(R.string.mode_general);
+        if (modeBtn != null) {
+            modeBtn.setOnClickListener(v -> {
+                PopupMenu menu = new PopupMenu(this, v);
+                menu.getMenu().add(0, 1, 0, getString(R.string.mode_general));
+                menu.getMenu().add(0, 2, 1, getString(R.string.mode_agro));
+                menu.getMenu().add(0, 3, 2, getString(R.string.mode_recommend));
+                menu.setOnMenuItemClickListener(item -> {
+                    if (item.getItemId() == 2) {
+                        currentMode = getString(R.string.mode_agro);
+                    } else if (item.getItemId() == 3) {
+                        currentMode = getString(R.string.mode_recommend);
+                    } else {
+                        currentMode = getString(R.string.mode_general);
+                    }
+                    return true;
+                });
+                menu.show();
+            });
+        }
+
+        if (inputAvatar != null) {
+            loadAvatar(inputAvatar);
+        }
 
         // 返回按钮：关闭当前页面
         backBtn.setOnClickListener(v -> {
@@ -96,7 +115,7 @@ public class TaobaoAIActivity extends AppCompatActivity {
             sendBtn.setEnabled(false);
             progress.setVisibility(View.VISIBLE);
             // 当前选择的业务模式，用于拼接不同的 system prompt
-            String mode = spinnerMode.getSelectedItem().toString();
+            String mode = currentMode;
             // 在子线程中访问网络，避免阻塞 UI 线程
             new Thread(() -> {
                 // 调用 DeepSeek 模型生成回复
@@ -120,38 +139,73 @@ public class TaobaoAIActivity extends AppCompatActivity {
 
     // 往聊天区域追加一条消息，根据 self 区分用户和 AI 样式
     private void appendMessage(String msg, boolean self) {
-        TextView tv = new TextView(this);
-        tv.setText(msg);
-        tv.setTextSize(16);
-        // 增加内边距，使气泡更舒适
-        tv.setPadding(32, 24, 32, 24);
-        
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(self ? Gravity.END : Gravity.START);
+
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        rowLp.topMargin = dpToPx(12);
+        row.setLayoutParams(rowLp);
+
+        ImageView avatar = new ImageView(this);
+        int avatarSize = dpToPx(34);
+        LinearLayout.LayoutParams avatarLp = new LinearLayout.LayoutParams(avatarSize, avatarSize);
+        avatarLp.topMargin = dpToPx(2);
+        avatar.setLayoutParams(avatarLp);
+        avatar.setBackgroundResource(R.drawable.circle_background_white);
+        int avatarPadding = dpToPx(2);
+        avatar.setPadding(avatarPadding, avatarPadding, avatarPadding, avatarPadding);
+
+        TextView bubble = new TextView(this);
+        bubble.setText(msg);
+        bubble.setTextSize(16);
+        bubble.setPadding(dpToPx(14), dpToPx(10), dpToPx(14), dpToPx(10));
+        bubble.setMaxWidth((int) (getResources().getDisplayMetrics().widthPixels * 0.68f));
+
+        LinearLayout.LayoutParams bubbleLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        lp.topMargin = 24; // 增加消息间距
-        
         if (self) {
-            // 自己的消息：右对齐，使用圆角气泡
-            lp.gravity = Gravity.END;
-            lp.leftMargin = 100; // 限制最大宽度，防止占满屏幕
-            tv.setBackgroundResource(R.drawable.bg_chat_bubble_me);
-            tv.setTextColor(0xFFFFFFFF);
+            bubbleLp.rightMargin = dpToPx(10);
+            bubble.setBackgroundResource(R.drawable.bg_chat_bubble_me);
+            bubble.setTextColor(0xFFFFFFFF);
         } else {
-            // AI 回复：左对齐，使用圆角气泡
-            lp.gravity = Gravity.START;
-            lp.rightMargin = 100; // 限制最大宽度
-            tv.setBackgroundResource(R.drawable.bg_chat_bubble_other);
-            tv.setTextColor(0xFF000000);
+            bubbleLp.leftMargin = dpToPx(10);
+            bubble.setBackgroundResource(R.drawable.bg_chat_bubble_other);
+            bubble.setTextColor(0xFF000000);
         }
-        tv.setLayoutParams(lp);
-        messagesContainer.addView(tv);
-        
-        // 自动滚动到底部
+        bubble.setLayoutParams(bubbleLp);
+
+        loadAvatar(avatar);
+
+        if (self) {
+            row.addView(bubble);
+            row.addView(avatar);
+        } else {
+            row.addView(avatar);
+            row.addView(bubble);
+        }
+
+        messagesContainer.addView(row);
+
         if (scrollView != null) {
             scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
         }
+    }
+
+    private void loadAvatar(ImageView imageView) {
+        Glide.with(this)
+                .load(R.drawable.avatar)
+                .circleCrop()
+                .into(imageView);
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     // 根据当前选中的模式返回对应的提示词，用作 system prompt

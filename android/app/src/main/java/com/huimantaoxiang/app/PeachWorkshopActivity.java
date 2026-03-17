@@ -3,12 +3,17 @@ package com.huimantaoxiang.app;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +35,11 @@ public class PeachWorkshopActivity extends AppCompatActivity {
     private Button btnGenerate;
     private ImageView ivResult;
     private ProgressBar progressBar;
+    private LinearLayout btnBack;
+    private ImageButton btnDownload;
+    private ImageButton btnShare;
+    private TextView tvPromptCount;
+    private TextView tvResultEmpty;
 
     private static final String API_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation";
     private String apiKey;
@@ -43,8 +53,26 @@ public class PeachWorkshopActivity extends AppCompatActivity {
         btnGenerate = findViewById(R.id.btn_generate);
         ivResult = findViewById(R.id.iv_result);
         progressBar = findViewById(R.id.progress_bar);
+        btnBack = findViewById(R.id.btn_back);
+        btnDownload = findViewById(R.id.btn_download);
+        btnShare = findViewById(R.id.btn_share);
+        tvPromptCount = findViewById(R.id.tv_prompt_count);
+        tvResultEmpty = findViewById(R.id.tv_result_empty);
 
         apiKey = BuildConfig.DASHSCOPE_API_KEY;
+
+        // 返回按钮点击事件
+        btnBack.setOnClickListener(v -> finish());
+
+        // 下载按钮点击事件
+        btnDownload.setOnClickListener(v -> {
+            Toast.makeText(this, "下载功能开发中", Toast.LENGTH_SHORT).show();
+        });
+
+        // 分享按钮点击事件
+        btnShare.setOnClickListener(v -> {
+            Toast.makeText(this, "分享功能开发中", Toast.LENGTH_SHORT).show();
+        });
 
         btnGenerate.setOnClickListener(v -> {
             String prompt = etPrompt.getText().toString().trim();
@@ -58,6 +86,25 @@ public class PeachWorkshopActivity extends AppCompatActivity {
             }
             generateImage(prompt);
         });
+
+        etPrompt.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                int length = s != null ? s.length() : 0;
+                tvPromptCount.setText(length + "/500");
+            }
+        });
+
+        int initLength = etPrompt.getText() != null ? etPrompt.getText().length() : 0;
+        tvPromptCount.setText(initLength + "/500");
     }
 
     private void generateImage(String prompt) {
@@ -210,6 +257,8 @@ public class PeachWorkshopActivity extends AppCompatActivity {
     private void showImage(String imageUrl) {
         runOnUiThread(() -> {
             setLoading(false);
+            tvResultEmpty.setVisibility(View.GONE);
+            ivResult.setVisibility(View.VISIBLE);
             Glide.with(this)
                     .load(imageUrl)
                     .placeholder(android.R.drawable.ic_menu_gallery)
@@ -220,6 +269,8 @@ public class PeachWorkshopActivity extends AppCompatActivity {
     private void handleError(String msg) {
         runOnUiThread(() -> {
             setLoading(false);
+            ivResult.setVisibility(View.GONE);
+            tvResultEmpty.setVisibility(View.VISIBLE);
             Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
             Log.e("PeachWorkshop", msg);
         });
@@ -230,7 +281,8 @@ public class PeachWorkshopActivity extends AppCompatActivity {
             progressBar.setVisibility(loading ? View.VISIBLE : View.GONE);
             btnGenerate.setEnabled(!loading);
             if (loading) {
-                ivResult.setImageDrawable(null);
+                ivResult.setVisibility(View.GONE);
+                tvResultEmpty.setVisibility(View.GONE);
             }
         });
     }

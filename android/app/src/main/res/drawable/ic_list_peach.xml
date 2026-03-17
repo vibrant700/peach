@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- 列表 + 桃子组合 -->
+    <path
+        android:fillColor="#7B2CBF"
+        android:pathData="M4,6h10v2H4V6z M4,11h8v2H4V11z M4,16h6v2H4V16z"/>
+    <path
+        android:fillColor="#FFB6C1"
+        android:pathData="M18,8c-0.5,0 -1,0.2 -1.5,0.5c-0.5,-0.3 -1,-0.5 -1.5,-0.5c-1,0 -1.8,0.8 -1.8,1.8c0,0.8 0.5,1.2 1.3,1.5c0.8,0.3 1,0.3 1.3,0.3c0.3,0 0.5,0 1.3,-0.3c0.8,-0.3 1.3,-0.7 1.3,-1.5c0,-1 -0.8,-1.8 -1.8,-1.8z"/>
+</vector>

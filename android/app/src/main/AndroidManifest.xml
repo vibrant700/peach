@@ -39,8 +39,7 @@
             android:label="桃源工坊" />
         <activity
             android:name=".IdentifyPeachActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:screenOrientation="portrait" />
         <activity
             android:name=".WarehouseActivity"
             android:exported="false"

@@ -37,34 +37,34 @@ public class MainActivity extends AppCompatActivity {
      */
     private void setupFunctionButtons() {
         // 识桃按钮 - 橙色渐变
-        setupFunctionButton(R.id.btn_identify, R.drawable.ic_menu_identify,
+        setupFunctionButton(R.id.btn_identify, R.drawable.ic_peach_1,
                 R.string.feature_identify_title, IdentifyPeachActivity.class,
-                R.drawable.bg_icon_gradient);
+                0);
 
         // 桃宝按钮 - 蓝色渐变
-        setupFunctionButton(R.id.btn_shop, R.drawable.ic_menu_shop,
+        setupFunctionButton(R.id.btn_shop, R.drawable.ic_peach_5,
                 R.string.feature_taobao_title, TaobaoAIActivity.class,
-                R.drawable.bg_icon_gradient2);
+                0);
 
         // 桃农社区按钮 - 黄色渐变
-        setupFunctionButton(R.id.btn_community, R.drawable.ic_menu_community,
+        setupFunctionButton(R.id.btn_community, R.drawable.ic_peach_3,
                 R.string.feature_community_title, CommunityActivity.class,
-                R.drawable.bg_icon_gradient3);
+                0);
 
         // 桃源工坊按钮 - 绿色渐变
-        setupFunctionButton(R.id.btn_workshop, R.drawable.ic_menu_workshop,
+        setupFunctionButton(R.id.btn_workshop, R.drawable.ic_peach_2,
                 R.string.feature_market_title, PeachWorkshopActivity.class,
-                R.drawable.bg_icon_gradient4);
+                0);
 
         // 仓库管理按钮 - 紫色渐变
-        setupFunctionButton(R.id.btn_irrigation, R.drawable.ic_menu_warehouse,
+        setupFunctionButton(R.id.btn_irrigation, R.drawable.ic_peach_4,
                 R.string.feature_irrigation_title, WarehouseActivity.class,
-                R.drawable.bg_icon_gradient5);
+                0);
 
         // 碳汇市场按钮 - 浅黄渐变
-        setupFunctionButton(R.id.btn_price, R.drawable.ic_menu_carbon,
+        setupFunctionButton(R.id.btn_price, R.drawable.ic_peach_6,
                 R.string.feature_price_title, CarbonMarketActivity.class,
-                R.drawable.bg_icon_gradient6);
+                0);
     }
 
     /**
@@ -83,22 +83,47 @@ public class MainActivity extends AppCompatActivity {
 
             // 设置不同的图标背景
             if (iconContainer != null) {
-                iconContainer.setBackgroundResource(iconBgRes);
+                if (iconBgRes != 0) {
+                    iconContainer.setBackgroundResource(iconBgRes);
+                } else {
+                    iconContainer.setBackground(null);
+                }
             }
+
+            // 添加波纹效果
+            button.setBackgroundResource(R.drawable.ripple_function_button);
 
             final Class<?> activity = targetActivity;
             button.setOnClickListener(v -> {
-                if (activity != null) {
-                    // 跳转到对应的Activity
-                    Intent intent = new Intent(MainActivity.this, activity);
-                    startActivity(intent);
-                } else {
-                    // 显示开发中提示
-                    String title = getString(titleRes);
-                    Toast.makeText(MainActivity.this,
-                            getString(R.string.function_dev, title),
-                            Toast.LENGTH_SHORT).show();
-                }
+                // 点击动画效果
+                v.animate()
+                    .scaleX(0.95f)
+                    .scaleY(0.95f)
+                    .setDuration(100)
+                    .withEndAction(() -> {
+                        v.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100)
+                            .start();
+                    })
+                    .start();
+
+                // 延迟跳转，让动画完成
+                v.postDelayed(() -> {
+                    if (activity != null) {
+                        // 跳转到对应的Activity
+                        Intent intent = new Intent(MainActivity.this, activity);
+                        startActivity(intent);
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    } else {
+                        // 显示开发中提示
+                        String title = getString(titleRes);
+                        Toast.makeText(MainActivity.this,
+                                getString(R.string.function_dev, title),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }, 150);
             });
         }
     }
@@ -133,12 +158,12 @@ public class MainActivity extends AppCompatActivity {
         List<PieChartView.PieSlice> slices = new ArrayList<>();
         int colorIndex = 0;
         int[] colors = {
-                Color.parseColor("#FF6B6B"),
-                Color.parseColor("#FFD93D"),
-                Color.parseColor("#FF8B3D"),
-                Color.parseColor("#FF6B9D"),
-                Color.parseColor("#FFB6D9"),
-                Color.parseColor("#4ECDC4")
+                Color.parseColor("#FF8A9B"),  // 桃红 - 水蜜桃
+                Color.parseColor("#FFD166"),  // 种子黄 - 桃罐头
+                Color.parseColor("#D4A373"),  // 枝干棕 - 桃干
+                Color.parseColor("#FFAE42"),  // 油桃橙 - 油桃
+                Color.parseColor("#FFC857"),  // 黄桃金 - 黄桃
+                Color.parseColor("#83E8B3")   // 水蜜桃绿 - 桃种子
         };
 
         // 清空图例容器
