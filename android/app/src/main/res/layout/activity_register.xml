@@ -44,15 +44,24 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ImageView
+            <FrameLayout
                 android:id="@+id/iv_back"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:background="@drawable/bg_back_button"
+                android:clickable="true"
                 android:contentDescription="@string/register_back"
-                android:padding="8dp"
-                android:src="@drawable/ic_back"
-                android:tint="@color/deep_purple_text" />
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="12dp">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/deep_purple_text" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tv_register_title"

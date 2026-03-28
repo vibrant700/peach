@@ -2,9 +2,9 @@ package com.huimantaoxiang.app;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,10 +28,10 @@ public class RegisterActivity extends AppCompatActivity {
 		etPassword = findViewById(R.id.et_register_password);
 		etConfirmPassword = findViewById(R.id.et_register_confirm_password);
 		Button btnRegister = findViewById(R.id.btn_register);
-		ImageView btnBack = findViewById(R.id.iv_back);
+		View btnBack = findViewById(R.id.iv_back);
 
 		btnRegister.setOnClickListener(v -> handleRegister());
-		btnBack.setOnClickListener(v -> finish());
+		btnBack.setOnClickListener(v -> getOnBackPressedDispatcher().onBackPressed());
 	}
 
 	private void handleRegister() {
