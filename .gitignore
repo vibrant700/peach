@@ -106,3 +106,16 @@ Thumbs.db
 android/app/build/
 android/.gradle/
 android/local.properties
+
+# JetBrains / Android Studio (all modules)
+**/.idea/
+**/*.iml
+
+# Python cache (yolov5)
+**/__pycache__/
+**/*.py[cod]
+
+# Common virtual environments
+**/.venv/
+**/venv/
+
