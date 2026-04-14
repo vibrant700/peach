@@ -135,6 +135,11 @@ public class TaobaoAIActivity extends AppCompatActivity {
 
         // 添加开场白
         appendMessage(getString(R.string.ai_welcome), false);
+
+        // 检查API配置，如果API Key为空，提示用户
+        if (apiKey == null || apiKey.isEmpty() || apiKey.equals("YOUR_API_KEY_HERE")) {
+            appendMessage("⚠️ 提示：您尚未配置DeepSeek API Key，AI功能可能无法正常使用。\n\n配置方法：\n1. 打开 app/build.gradle\n2. 在 buildConfigField 中添加 DEEPSEEK_API_KEY\n3. 填入您的 API Key\n\n或者使用本地Ollama部署DeepSeek模型。", false);
+        }
     }
 
     // 往聊天区域追加一条消息，根据 self 区分用户和 AI 样式
@@ -269,21 +274,120 @@ public class TaobaoAIActivity extends AppCompatActivity {
             int code = conn.getResponseCode();
             if (code != 200) {
                 String err = readStream(conn.getErrorStream());
-                return "HTTP " + code + ": " + (err != null ? err : "无错误详情");
+                String errorMsg = "抱歉，AI服务暂时不可用（HTTP " + code + "）\n";
+                if (err != null && err.length() > 0) {
+                    // 简化错误信息，避免显示原始错误
+                    if (err.contains("401") || err.contains("Unauthorized")) {
+                        errorMsg += "请检查API Key配置";
+                    } else if (err.contains("404") || err.contains("Not Found")) {
+                        errorMsg += "请检查模型名称配置";
+                    } else {
+                        errorMsg += "请稍后重试";
+                    }
+                } else {
+                    errorMsg += "请检查网络连接";
+                }
+                return errorMsg;
             }
 
             String ok = readStream(conn.getInputStream());
+            if (ok == null || ok.isEmpty()) {
+                return "抱歉，AI服务未返回任何内容";
+            }
+
             JSONObject resp = new JSONObject(ok);
             org.json.JSONArray choices = resp.optJSONArray("choices");
-            if (choices == null || choices.length() == 0) return "无回复内容";
+            if (choices == null || choices.length() == 0) {
+                return "抱歉，AI未能生成回复";
+            }
 
             JSONObject first = choices.getJSONObject(0);
             JSONObject msg = first.optJSONObject("message");
-            return msg != null ? msg.optString("content") : "回复格式异常";
+            if (msg == null) {
+                return "抱歉，回复格式异常";
+            }
+
+            String content = msg.optString("content");
+            if (content == null || content.isEmpty()) {
+                return "抱歉，AI返回了空内容";
+            }
+
+            // 清理Markdown格式，让回复更自然
+            content = cleanMarkdown(content);
+
+            // 再次检查清理后的内容
+            content = content.trim();
+            if (content.isEmpty() || content.equals("***") || content.equals("**") || content.equals("*")) {
+                return "我理解了您的问题，但需要更多信息才能准确回答。能否详细说明一下？";
+            }
+
+            return content;
 
         } catch (Exception e) {
-            return "调用异常: " + e.getMessage();
+            e.printStackTrace();
+            String errorMsg = e.getMessage();
+            if (errorMsg != null) {
+                // 简化错误信息
+                if (errorMsg.contains("UnknownHostException") || errorMsg.contains("ConnectException")) {
+                    return "抱歉，无法连接到AI服务\n请检查：\n1. DeepSeek服务是否已启动\n2. 网络连接是否正常";
+                } else if (errorMsg.contains("Timeout")) {
+                    return "抱歉，AI服务响应超时，请稍后重试";
+                } else if (errorMsg.contains("JSON")) {
+                    return "抱歉，AI返回数据格式异常，请重新尝试";
+                }
+            }
+            return "抱歉，AI服务出现问题：" + (errorMsg != null ? errorMsg : "未知错误");
         }
+    }
+
+    /**
+     * 清理Markdown格式，让AI回复更自然
+     * @param content 原始内容
+     * @return 清理后的内容
+     */
+    private String cleanMarkdown(String content) {
+        if (content == null || content.isEmpty()) {
+            return content;
+        }
+
+        // 移除Markdown标题标记
+        content = content.replaceAll("^#+\\s*", ""); // 移除开头的 #, ##, ### 等
+        content = content.replaceAll("\\n#+\\s*", "\n"); // 移除换行后的 #, ## 等
+
+        // 移除加粗标记
+        content = content.replaceAll("\\*\\*", ""); // 移除 **加粗**
+        content = content.replaceAll("\\*", ""); // 移除 *斜体*
+
+        // 移除代码块标记
+        content = content.replaceAll("```[\\s\\S]*?```", ""); // 移除代码块
+        content = content.replaceAll("`", ""); // 移除行内代码
+
+        // 移除链接标记
+        content = content.replaceAll("\\[([^\\]]+)\\]\\([^\\)]+\\)", "$1"); // [文本](链接) → 文本
+
+        // 移除列表标记（保留缩进）
+        content = content.replaceAll("^\\s*[-*+]\\s+", ""); // - 或 * 或 + 开头的列表
+        content = content.replaceAll("^\\s*\\d+\\.\\s+", ""); // 1. 2. 3. 开头的列表
+
+        // 移除引用标记
+        content = content.replaceAll("^>\\s*", ""); // > 开头的引用
+
+        // 移除分割线
+        content = content.replaceAll("^-{3,}\\s*$", ""); // --- 开头的分割线
+        content = content.replaceAll("^\\*{3,}\\s*$", ""); // *** 开头的分割线
+
+        // 清理多余的空行
+        content = content.replaceAll("\\n{3,}", "\n\n"); // 多个连续换行压缩为2个
+
+        // 移除开头和结尾的空白
+        content = content.trim();
+
+        // 如果清理后为空，返回友好提示
+        if (content.isEmpty()) {
+            return "我理解了您的问题，但需要更多信息才能准确回答。能否详细说明一下？";
+        }
+
+        return content;
     }
 
     // 将输入流内容完整读取为字符串（UTF-8），用于处理 HTTP 响应

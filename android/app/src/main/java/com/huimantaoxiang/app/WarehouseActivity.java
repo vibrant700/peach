@@ -23,6 +23,8 @@ import java.util.List;
 public class WarehouseActivity extends AppCompatActivity {
 
     private ListView listViewInventory;
+    private long lastAddedItemId = -1; // 记录最后添加的项ID
+    private boolean hasShownHighlight = false; // 是否已显示过高亮
     private EditText editProductName, editQuantity, editCategory, editSearch;
     private Button btnAdd, btnSearch, btnViewAll;
     private TextView tvTotalItems, tvTotalCategories, tvLowStock, tvCategoryCount;
@@ -76,6 +78,10 @@ public class WarehouseActivity extends AppCompatActivity {
         listViewInventory.setAdapter(adapter);
 
         updateStatistics();
+
+        // 确保按钮可用
+        btnAdd.setEnabled(true);
+        btnAdd.setAlpha(1.0f);
     }
 
     private void setupListeners() {
@@ -85,6 +91,18 @@ public class WarehouseActivity extends AppCompatActivity {
 
         // 返回按钮
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
+
+        // 移除TextWatcher输入验证，改为在添加时验证
+        // 避免UI阻塞和输入延迟
+    }
+
+    // 验证输入并启用/禁用添加按钮（移除自动验证，改用手动触发）
+    private void validateInputs() {
+        boolean isValid = !editProductName.getText().toString().trim().isEmpty() &&
+                         !editQuantity.getText().toString().trim().isEmpty() &&
+                         !editCategory.getText().toString().trim().isEmpty();
+        btnAdd.setEnabled(isValid);
+        btnAdd.setAlpha(isValid ? 1.0f : 0.5f);
     }
 
     private void addInventory() {
@@ -99,21 +117,32 @@ public class WarehouseActivity extends AppCompatActivity {
 
         try {
             int qty = Integer.parseInt(quantity);
-            items.add(new WarehouseItem(name, quantity, category, qty, getRandomColor()));
+            WarehouseItem newItem = new WarehouseItem(name, quantity, category, qty, getRandomColor());
+            items.add(newItem);
+
+            // 记录最后添加的项ID，用于高亮显示
+            lastAddedItemId = newItem.id;
+            hasShownHighlight = false; // 重置高亮标志
 
             // 如果在搜索模式下，添加后返回全部显示
             if (isSearchMode) {
                 isSearchMode = false;
                 btnViewAll.setVisibility(View.GONE);
                 editSearch.setText("");
-                adapter.updateData(items);
-            } else {
-                adapter.notifyDataSetChanged();
             }
+
+            // 统一使用updateData刷新列表
+            adapter.updateData(items);
+
+            // 滚动到最新添加的项
+            listViewInventory.post(() -> {
+                listViewInventory.smoothScrollToPosition(items.size() - 1);
+            });
 
             updateStatistics();
             clearInputs();
-            Toast.makeText(this, "添加成功", Toast.LENGTH_SHORT).show();
+            validateInputs(); // 重新验证输入状态
+            Toast.makeText(this, "添加成功：" + name + " (库存: " + qty + ")", Toast.LENGTH_SHORT).show();
         } catch (NumberFormatException e) {
             Toast.makeText(this, "请输入有效的数量", Toast.LENGTH_SHORT).show();
         }
@@ -245,6 +274,20 @@ public class WarehouseActivity extends AppCompatActivity {
                 holder.viewColorIndicator.setBackgroundColor(android.graphics.Color.parseColor(item.color));
             } catch (Exception e) {
                 holder.viewColorIndicator.setBackgroundColor(0xFF6B6B);
+            }
+
+            // 高亮显示新添加的项（只在第一次显示时执行动画）
+            if (item.id == lastAddedItemId && !hasShownHighlight) {
+                convertView.setBackgroundColor(0xFFE8F5E9); // 浅绿色背景
+                // 标记已显示高亮
+                hasShownHighlight = true;
+                // 延迟重置标志和恢复背景
+                final View itemView = convertView;
+                convertView.postDelayed(() -> {
+                    itemView.setBackgroundColor(0xFFFFFFFF);
+                }, 1000); // 1秒后恢复背景
+            } else {
+                convertView.setBackgroundColor(0xFFFFFFFF);
             }
 
             // 存储当前项的ID到tag中，避免position复用问题

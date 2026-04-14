@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">智桃科研</string>
+    <string name="app_name">科智桃研</string>
 
-    <string name="title_app">智桃科研</string>
+    <string name="title_app">科智桃研</string>
 
     <string name="feature_identify_title">慧眼识桃</string>
     <string name="feature_identify_subtitle">智能识别桃品种</string>
