@@ -56,11 +56,17 @@ android {
             ?: System.getenv("DASHSCOPE_API_KEY")
             ?: ""
 
+        val bmobAppId = (project.findProperty("BMOB_APP_ID") as String?)
+            ?: localProperties.getProperty("BMOB_APP_ID")
+            ?: System.getenv("BMOB_APP_ID")
+            ?: "246c5029cf8a13cb2dbf0ecd45372757"
+
         buildConfigField("String", "AI_BASE_URL", "\"$dsBaseUrl\"")
         buildConfigField("String", "AI_BACKEND_TYPE", "\"$dsBackend\"")
         buildConfigField("String", "AI_MODEL", "\"$dsModel\"")
         buildConfigField("String", "DEEPSEEK_API_KEY", "\"$dsApiKey\"")
         buildConfigField("String", "DASHSCOPE_API_KEY", "\"$dashScopeApiKey\"")
+        buildConfigField("String", "BMOB_APP_ID", "\"$bmobAppId\"")
     }
 
     buildTypes {
@@ -91,7 +97,11 @@ dependencies {
     implementation("androidx.gridlayout:gridlayout:1.0.0")
     // 图片加载库 Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
-
+    implementation("io.github.bmob:android-sdk:3.9.8")
+    implementation("com.squareup.okhttp3:okhttp:3.14.9")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

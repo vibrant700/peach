@@ -1,6 +1,5 @@
 package com.huimantaoxiang.app;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -9,15 +8,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class RegisterActivity extends AppCompatActivity {
+import cn.bmob.v3.exception.BmobException;
+import cn.bmob.v3.listener.SaveListener;
 
-	private static final String AUTH_PREFS = "auth_prefs";
-	private static final String KEY_USERNAME = "username";
-	private static final String KEY_PASSWORD = "password";
+public class RegisterActivity extends AppCompatActivity {
 
 	private EditText etUsername;
 	private EditText etPassword;
 	private EditText etConfirmPassword;
+	private Button btnRegister;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +26,7 @@ public class RegisterActivity extends AppCompatActivity {
 		etUsername = findViewById(R.id.et_register_username);
 		etPassword = findViewById(R.id.et_register_password);
 		etConfirmPassword = findViewById(R.id.et_register_confirm_password);
-		Button btnRegister = findViewById(R.id.btn_register);
+		btnRegister = findViewById(R.id.btn_register);
 		View btnBack = findViewById(R.id.iv_back);
 
 		btnRegister.setOnClickListener(v -> handleRegister());
@@ -54,14 +53,28 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 
-		SharedPreferences sp = getSharedPreferences(AUTH_PREFS, MODE_PRIVATE);
-		sp.edit()
-				.putString(KEY_USERNAME, username)
-				.putString(KEY_PASSWORD, password)
-				.apply();
+		btnRegister.setEnabled(false);
 
-		Toast.makeText(this, R.string.register_success, Toast.LENGTH_SHORT).show();
-		finish();
+		BmobAppUser user = new BmobAppUser();
+		user.setUsername(username);
+		user.setPassword(password);
+		try {
+			user.signUp(new SaveListener<BmobAppUser>() {
+				@Override
+				public void done(BmobAppUser signedUser, BmobException e) {
+					btnRegister.setEnabled(true);
+					if (e == null) {
+						Toast.makeText(RegisterActivity.this, R.string.register_success, Toast.LENGTH_SHORT).show();
+						finish();
+					} else {
+						Toast.makeText(RegisterActivity.this, BmobErrorMessageUtil.toFriendlyMessage(e), Toast.LENGTH_SHORT).show();
+					}
+				}
+			});
+		} catch (Throwable t) {
+			btnRegister.setEnabled(true);
+			Toast.makeText(this, BmobErrorMessageUtil.toFriendlyMessage(t), Toast.LENGTH_SHORT).show();
+		}
 	}
 }
 
