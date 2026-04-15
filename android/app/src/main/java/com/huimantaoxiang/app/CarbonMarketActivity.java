@@ -3,6 +3,7 @@ package com.huimantaoxiang.app;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -39,10 +40,76 @@ public class CarbonMarketActivity extends AppCompatActivity {
         setContentView(R.layout.activity_carbon_market);
 
         initViews();
-        initData();
+
+        // 恢复保存的状态
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        } else {
+            initData();
+        }
+
         setupListeners();
         animatePriceUpdate();
         animateChart();
+    }
+
+    /**
+     * 处理singleTask模式下新的Intent
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask模式下，Activity实例被复用时会调用此方法
+        // 不需要做任何处理，因为我们希望保持当前状态
+    }
+
+    /**
+     * 保存Activity状态
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // 保存市场数据
+        outState.putDouble("currentPrice", currentPrice);
+        outState.putDouble("myCarbonCredits", myCarbonCredits);
+        outState.putDouble("totalCarbonTraded", totalCarbonTraded);
+        outState.putDouble("priceChange", priceChange);
+
+        // 保存输入框内容
+        if (editAmount != null) {
+            outState.putString("amount", editAmount.getText().toString());
+        }
+    }
+
+    /**
+     * 恢复Activity状态
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    /**
+     * 恢复状态的通用方法
+     */
+    private void restoreState(Bundle savedInstanceState) {
+        // 恢复市场数据
+        currentPrice = savedInstanceState.getDouble("currentPrice", 45.8);
+        myCarbonCredits = savedInstanceState.getDouble("myCarbonCredits", 1250.0);
+        totalCarbonTraded = savedInstanceState.getDouble("totalCarbonTraded", 158600.0);
+        priceChange = savedInstanceState.getDouble("priceChange", 2.3);
+
+        updateMarketData();
+        updateCarbonData();
+        updateMarketTrend();
+
+        // 恢复输入框内容
+        String amount = savedInstanceState.getString("amount", "");
+        if (editAmount != null) {
+            editAmount.setText(amount);
+        }
     }
 
     private void initViews() {

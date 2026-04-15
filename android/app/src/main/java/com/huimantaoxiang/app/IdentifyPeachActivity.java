@@ -58,7 +58,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     // 数据
     private Bitmap selectedImage;
     private Bitmap resultImage;        // 新增：识别结果图片
-    private String selectedModel = "YOLOv5标准模型";
+    private String selectedModel = "YOLOv11标准模型";
     private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
 
     // 服务器配置
@@ -77,6 +77,103 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         setupListeners();
         setupSpinner();
         initMockData();
+
+        // 恢复保存的状态
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        }
+    }
+
+    /**
+     * 处理singleTask模式下新的Intent
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask模式下，Activity实例被复用时会调用此方法
+        // 不需要做任何处理，因为我们希望保持当前状态
+    }
+
+    /**
+     * 保存Activity状态
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // 保存选择的图片
+        if (selectedImage != null) {
+            outState.putParcelable("selectedImage", selectedImage);
+        }
+
+        // 保存识别结果图片
+        if (resultImage != null) {
+            outState.putParcelable("resultImage", resultImage);
+        }
+
+        // 保存选择的模型
+        outState.putString("selectedModel", selectedModel);
+
+        // 保存识别按钮状态
+        Button btnIdentify = findViewById(R.id.btn_identify);
+        if (btnIdentify != null) {
+            outState.putString("identifyButtonText", btnIdentify.getText().toString());
+            outState.putBoolean("identifyButtonEnabled", btnIdentify.isEnabled());
+        }
+    }
+
+    /**
+     * 恢复Activity状态
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    /**
+     * 恢复状态的通用方法
+     */
+    private void restoreState(Bundle savedInstanceState) {
+        // 恢复选择的图片
+        selectedImage = savedInstanceState.getParcelable("selectedImage");
+        if (selectedImage != null && ivPreview != null) {
+            ivPreview.setImageBitmap(selectedImage);
+            ivPreview.setAlpha(1.0f);
+        }
+
+        // 恢复识别结果图片
+        resultImage = savedInstanceState.getParcelable("resultImage");
+        if (resultImage != null && ivResult != null) {
+            ivResult.setImageBitmap(resultImage);
+            ivResult.setAlpha(1.0f);
+        }
+
+        // 恢复选择的模型
+        String savedModel = savedInstanceState.getString("selectedModel");
+        if (savedModel != null) {
+            selectedModel = savedModel;
+            // 恢复Spinner选择
+            if (spinnerModel != null) {
+                ArrayAdapter<String> adapter = (ArrayAdapter<String>) spinnerModel.getAdapter();
+                if (adapter != null) {
+                    int position = adapter.getPosition(savedModel);
+                    if (position >= 0) {
+                        spinnerModel.setSelection(position);
+                    }
+                }
+            }
+        }
+
+        // 恢复识别按钮状态
+        String buttonText = savedInstanceState.getString("identifyButtonText");
+        boolean buttonEnabled = savedInstanceState.getBoolean("identifyButtonEnabled", true);
+        if (btnIdentify != null) {
+            if (buttonText != null) {
+                btnIdentify.setText(buttonText);
+            }
+            btnIdentify.setEnabled(buttonEnabled);
+        }
     }
 
     private void initImagePicker() {
@@ -140,8 +237,8 @@ public class IdentifyPeachActivity extends AppCompatActivity {
 
     private void setupSpinner() {
         List<String> models = new ArrayList<>();
-        models.add("YOLOv5标准模型");
-        models.add("改进YOLOv5模型（高精度）");
+        models.add("YOLOv11标准模型");
+        models.add("改进YOLOv11模型（高精度）");
         models.add("轻量化模型（快速）");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
@@ -454,6 +551,14 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     }
 
     private void displayResults(PeachResult result) {
+        // ✨ 首先显示加工建议（作为主要内容）
+        String[] processingRecommendation = getProcessingRecommendation(result);
+        addProcessingRecommendationCard(result, processingRecommendation);
+
+        // 添加分割线
+        addDivider();
+
+        // 然后显示其他检测指标
         addResultCard("品种识别", result.variety, String.format("置信度：%.1f%%", result.confidence), (int) result.confidence);
         addResultCard("综合评级", result.grade, "符合" + result.grade + "标准",
                 result.grade.equals("特级果") ? 95 : result.grade.equals("一级果") ? 85 : 75);
@@ -464,10 +569,6 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                 String.format("重量：%dg，果径：%dmm", result.weight, result.diameter), (int) ((float) result.weight / 300 * 100));
         addResultCard("光照情况", getLightLevel(result.lightScore),
                 String.format("光照评分：%d/100", result.lightScore), result.lightScore);
-
-        // 添加加工建议
-        String[] processingRecommendation = getProcessingRecommendation(result);
-        addProcessingCard(processingRecommendation[0], processingRecommendation[1], processingRecommendation[2]);
     }
 
     private String getMaturityLevel(int colorPercentage) {
@@ -491,12 +592,15 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     /**
      * 根据桃子指标判断适合的加工方式
      * @param result 桃子检测结果
-     * @return [加工类型, 适合原因, 推荐指数]
+     * @return [加工类型, 适合原因, 推荐等级, 匹配分数, 优势说明, 加工提示, 关键指标数组]
      */
     private String[] getProcessingRecommendation(PeachResult result) {
         String processingType;
         String reason;
         String recommendation;
+        String advantages = "";
+        String tips = "";
+        String[] keyIndicators;
         int score = 0;
 
         // 综合评分计算
@@ -504,6 +608,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         int maturity = result.colorPercentage;
         int weight = result.weight;
         String grade = result.grade;
+        int lightScore = result.lightScore;
 
         // 判断逻辑
         if (sweetness >= 12.0 && maturity >= 70 && weight >= 200) {
@@ -512,24 +617,52 @@ public class IdentifyPeachActivity extends AppCompatActivity {
             reason = "高甜度且果肉厚实，脱水后口感浓郁，糖分保存率高";
             score = 95;
             recommendation = "强烈推荐";
+            advantages = "营养丰富 | 保存期长 | 运输方便";
+            tips = "建议选用完全成熟的果实，去皮去核后切片晾晒，控制温度在50-60℃";
+            keyIndicators = new String[]{
+                "🍬 甜度 " + sweetness + "°Bx",
+                "⚖️ 重量 " + weight + "g",
+                "🌈 成熟度 " + maturity + "%"
+            };
         } else if (sweetness >= 11.0 && maturity >= 80 && grade.equals("特级果")) {
             // 高甜度+完全成熟+特级果 → 适合做果脯
             processingType = "🍬 糖渍果脯";
             reason = "完全成熟的特级果，糖渍后色泽诱人，口感软糯香甜";
             score = 92;
             recommendation = "强烈推荐";
+            advantages = "色泽鲜艳 | 口感软糯 | 易于保存";
+            tips = "采用分次糖渍工艺，使果肉充分吸收糖分，保持果形完整";
+            keyIndicators = new String[]{
+                "🏆 特级果",
+                "🍬 甜度 " + sweetness + "°Bx",
+                "🌈 成熟度 " + maturity + "%"
+            };
         } else if (sweetness >= 10.0 && maturity >= 60) {
             // 中高甜度+基本成熟 → 适合做桃酒/桃醋
-            if (result.lightScore >= 80) {
+            if (lightScore >= 80) {
                 processingType = "🍷 桃子酒";
                 reason = "糖度适中且光照充足，发酵后酒香浓郁，口感醇厚";
                 score = 88;
                 recommendation = "推荐";
+                advantages = "酒香浓郁 | 营养保留 | 度数适中";
+                tips = "选用新鲜完好果实，清洗干净后破碎发酵，控制发酵温度在20-25℃";
+                keyIndicators = new String[]{
+                    "🍬 甜度 " + sweetness + "°Bx",
+                    "☀️ 光照 " + lightScore + "/100",
+                    "🌈 成熟度 " + maturity + "%"
+                };
             } else {
                 processingType = "🥫 桃子醋";
                 reason = "酸甜适中，适合酿制果醋，营养价值高";
                 score = 85;
                 recommendation = "推荐";
+                advantages = "酸甜可口 | 消化助益 | 天然健康";
+                tips = "采用醋酸发酵工艺，发酵时间约30-45天，定期搅拌通风";
+                keyIndicators = new String[]{
+                    "🍬 甜度 " + sweetness + "°Bx",
+                    "🌈 成熟度 " + maturity + "%",
+                    "⚖️ 重量 " + weight + "g"
+                };
             }
         } else if (maturity >= 85 && weight >= 180) {
             // 高成熟度+中大果 → 适合做桃汁
@@ -537,65 +670,186 @@ public class IdentifyPeachActivity extends AppCompatActivity {
             reason = "完全成熟且汁水丰富，出汁率高，口感新鲜香甜";
             score = 90;
             recommendation = "推荐";
+            advantages = "新鲜原味 | 维生素丰富 | 即饮便捷";
+            tips = "采用冷压榨取工艺，避免高温加热，保留更多营养成分";
+            keyIndicators = new String[]{
+                "🌈 成熟度 " + maturity + "%",
+                "⚖️ 重量 " + weight + "g",
+                "💧 汁水丰富"
+            };
         } else if (weight >= 220 && grade.equals("特级果")) {
             // 大果+特级果 → 适合做罐头
             processingType = "🥫 糖水罐头";
             reason = "特级大果，果形完整，制作罐头卖相佳，口感脆嫩";
             score = 87;
             recommendation = "推荐";
+            advantages = "果形完整 | 卖相极佳 | 保质期长";
+            tips = "选用八成熟果实，去皮去核后保持果形完整，糖水浓度40-50%";
+            keyIndicators = new String[]{
+                "🏆 特级果",
+                "⚖️ 重量 " + weight + "g",
+                "📏 果径 " + result.diameter + "mm"
+            };
         } else if (sweetness >= 13.0 && maturity >= 75) {
             // 超高甜度 → 适合做桃酱
             processingType = "🍯 桃子果酱";
             reason = "超高甜度，制作果酱时无需额外加糖，口感纯正";
             score = 93;
             recommendation = "强烈推荐";
+            advantages = "口感纯正 | 天然甜味 | 用途广泛";
+            tips = "小火慢熬，不停搅拌至浓稠状，可添加柠檬汁增香防腐";
+            keyIndicators = new String[]{
+                "🍬 甜度 " + sweetness + "°Bx",
+                "🌈 成熟度 " + maturity + "%",
+                "✨ 无需加糖"
+            };
         } else if (maturity >= 80) {
             // 高成熟度 → 适合做冷冻桃肉
             processingType = "❄️ 冷冻桃肉";
             reason = "完全成熟，冷冻后保持鲜嫩口感，适合烘焙和甜品";
             score = 82;
             recommendation = "较适合";
+            advantages = "保持新鲜 | 方便储存 | 用途多样";
+            tips = "快速冷冻处理，使用前提前冷藏解冻，适合制作烘焙甜品";
+            keyIndicators = new String[]{
+                "🌈 成熟度 " + maturity + "%",
+                "❄️ 冷冻保鲜",
+                "🍃 适合烘焙"
+            };
         } else {
             // 其他情况 → 适合做综合制品
             processingType = "🍧 综合加工";
             reason = "各项指标均衡，可制作桃子派、桃子冰淇淋等综合制品";
             score = 78;
             recommendation = "较适合";
+            advantages = "灵活多样 | 创意空间 | 适合研发";
+            tips = "可根据具体指标选择合适的加工方式，建议混合多种制品提高利用率";
+            keyIndicators = new String[]{
+                "📊 指标均衡",
+                "🔧 灵活加工",
+                "💡 多种选择"
+            };
         }
 
-        return new String[]{processingType, reason, recommendation + " (匹配度" + score + "/100)"};
+        return new String[]{processingType, reason, recommendation, String.valueOf(score), advantages, tips};
     }
 
     /**
-     * 添加加工建议卡片
+     * 添加分割线
      */
-    private void addProcessingCard(String type, String reason, String recommendation) {
-        View cardView = LayoutInflater.from(this).inflate(R.layout.item_peach_result, llResults, false);
+    private void addDivider() {
+        View divider = new View(this);
+        divider.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            2
+        ));
+        divider.setBackgroundColor(getResources().getColor(R.color.color_card_identify));
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) divider.getLayoutParams();
+        params.setMargins(40, 20, 40, 20);
+        divider.setLayoutParams(params);
+        llResults.addView(divider);
+    }
 
-        TextView tvTitle = cardView.findViewById(R.id.tv_item_title);
-        TextView tvValue = cardView.findViewById(R.id.tv_item_value);
-        TextView tvDesc = cardView.findViewById(R.id.tv_item_description);
-        ProgressBar progressBar = cardView.findViewById(R.id.pb_item_progress);
+    /**
+     * 添加加工建议卡片（使用新布局）
+     */
+    private void addProcessingRecommendationCard(PeachResult result, String[] recommendation) {
+        View cardView = LayoutInflater.from(this).inflate(R.layout.item_processing_recommendation, llResults, false);
 
-        tvTitle.setText("💡 加工建议");
-        tvValue.setText(type);
-        tvDesc.setText(reason + "\n" + recommendation);
+        // 绑定视图
+        TextView tvProcessingType = cardView.findViewById(R.id.tv_processing_type);
+        TextView tvRecommendationLevel = cardView.findViewById(R.id.tv_recommendation_level);
+        TextView tvRecommendationReason = cardView.findViewById(R.id.tv_recommendation_reason);
+        TextView tvMatchScore = cardView.findViewById(R.id.tv_match_score);
+        TextView tvAdvantages = cardView.findViewById(R.id.tv_advantages);
+        TextView tvProcessingTips = cardView.findViewById(R.id.tv_processing_tips);
+        LinearLayout llKeyIndicators = cardView.findViewById(R.id.ll_key_indicators);
 
-        // 设置进度条颜色（加工建议用不同颜色）
-        if (progressBar != null) {
-            progressBar.setVisibility(View.VISIBLE);
-            // 从recommendation中提取分数
-            int score = 75; // 默认值
-            try {
-                String scoreStr = recommendation.substring(recommendation.indexOf("匹配度") + 3, recommendation.indexOf("/100"));
-                score = Integer.parseInt(scoreStr);
-            } catch (Exception e) {
-                // 解析失败使用默认值
-            }
-            progressBar.setProgress(score);
+        // 设置内容
+        tvProcessingType.setText(recommendation[0]); // 加工类型
+
+        // 设置推荐等级（根据分数显示星星）
+        String level = recommendation[2]; // 推荐等级
+        int score = Integer.parseInt(recommendation[3]); // 匹配分数
+        String stars = "";
+        if (score >= 90) stars = "⭐⭐⭐⭐⭐";
+        else if (score >= 80) stars = "⭐⭐⭐⭐";
+        else if (score >= 70) stars = "⭐⭐⭐";
+        else stars = "⭐⭐";
+
+        tvRecommendationLevel.setText(stars + " " + level);
+        tvRecommendationReason.setText(recommendation[1]); // 原因
+        tvMatchScore.setText("匹配度 " + score + "%");
+        tvAdvantages.setText("✨ 优势：" + recommendation[4]); // 优势
+        tvProcessingTips.setText("💡 加工提示：" + recommendation[5]); // 加工提示
+
+        // 添加关键指标
+        String[] keyIndicators = getKeyIndicators(result, recommendation[0]);
+        for (String indicator : keyIndicators) {
+            TextView indicatorView = new TextView(this);
+            indicatorView.setText(indicator);
+            indicatorView.setTextSize(13);
+            indicatorView.setTextColor(getResources().getColor(R.color.deep_purple_text));
+            indicatorView.setPadding(20, 6, 0, 6);
+            llKeyIndicators.addView(indicatorView);
         }
 
         llResults.addView(cardView);
+    }
+
+    /**
+     * 根据加工类型返回关键指标
+     */
+    private String[] getKeyIndicators(PeachResult result, String processingType) {
+        if (processingType.contains("桃干")) {
+            return new String[]{
+                "🍬 甜度：" + result.sweetness + "°Bx",
+                "⚖️ 重量：" + result.weight + "g",
+                "🌈 成熟度：" + result.colorPercentage + "%"
+            };
+        } else if (processingType.contains("果脯")) {
+            return new String[]{
+                "🏆 等级：" + result.grade,
+                "🍬 甜度：" + result.sweetness + "°Bx",
+                "🌈 成熟度：" + result.colorPercentage + "%"
+            };
+        } else if (processingType.contains("桃酒")) {
+            return new String[]{
+                "🍬 甜度：" + result.sweetness + "°Bx",
+                "☀️ 光照：" + result.lightScore + "/100",
+                "🌈 成熟度：" + result.colorPercentage + "%"
+            };
+        } else if (processingType.contains("桃汁")) {
+            return new String[]{
+                "🌈 成熟度：" + result.colorPercentage + "%",
+                "⚖️ 重量：" + result.weight + "g",
+                "💧 汁水丰富"
+            };
+        } else if (processingType.contains("罐头")) {
+            return new String[]{
+                "🏆 等级：" + result.grade,
+                "⚖️ 重量：" + result.weight + "g",
+                "📏 果径：" + result.diameter + "mm"
+            };
+        } else if (processingType.contains("果酱")) {
+            return new String[]{
+                "🍬 甜度：" + result.sweetness + "°Bx",
+                "🌈 成熟度：" + result.colorPercentage + "%",
+                "✨ 无需加糖"
+            };
+        } else if (processingType.contains("冷冻")) {
+            return new String[]{
+                "🌈 成熟度：" + result.colorPercentage + "%",
+                "❄️ 冷冻保鲜",
+                "🍃 适合烘焙"
+            };
+        } else {
+            return new String[]{
+                "📊 指标均衡",
+                "🔧 灵活加工",
+                "💡 多种选择"
+            };
+        }
     }
 
     private void addResultCard(String title, String value, String description, int progress) {
