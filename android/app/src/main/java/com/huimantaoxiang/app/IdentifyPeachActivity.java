@@ -77,6 +77,103 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         setupListeners();
         setupSpinner();
         initMockData();
+
+        // 恢复保存的状态
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        }
+    }
+
+    /**
+     * 处理singleTask模式下新的Intent
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask模式下，Activity实例被复用时会调用此方法
+        // 不需要做任何处理，因为我们希望保持当前状态
+    }
+
+    /**
+     * 保存Activity状态
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // 保存选择的图片
+        if (selectedImage != null) {
+            outState.putParcelable("selectedImage", selectedImage);
+        }
+
+        // 保存识别结果图片
+        if (resultImage != null) {
+            outState.putParcelable("resultImage", resultImage);
+        }
+
+        // 保存选择的模型
+        outState.putString("selectedModel", selectedModel);
+
+        // 保存识别按钮状态
+        Button btnIdentify = findViewById(R.id.btn_identify);
+        if (btnIdentify != null) {
+            outState.putString("identifyButtonText", btnIdentify.getText().toString());
+            outState.putBoolean("identifyButtonEnabled", btnIdentify.isEnabled());
+        }
+    }
+
+    /**
+     * 恢复Activity状态
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    /**
+     * 恢复状态的通用方法
+     */
+    private void restoreState(Bundle savedInstanceState) {
+        // 恢复选择的图片
+        selectedImage = savedInstanceState.getParcelable("selectedImage");
+        if (selectedImage != null && ivPreview != null) {
+            ivPreview.setImageBitmap(selectedImage);
+            ivPreview.setAlpha(1.0f);
+        }
+
+        // 恢复识别结果图片
+        resultImage = savedInstanceState.getParcelable("resultImage");
+        if (resultImage != null && ivResult != null) {
+            ivResult.setImageBitmap(resultImage);
+            ivResult.setAlpha(1.0f);
+        }
+
+        // 恢复选择的模型
+        String savedModel = savedInstanceState.getString("selectedModel");
+        if (savedModel != null) {
+            selectedModel = savedModel;
+            // 恢复Spinner选择
+            if (spinnerModel != null) {
+                ArrayAdapter<String> adapter = (ArrayAdapter<String>) spinnerModel.getAdapter();
+                if (adapter != null) {
+                    int position = adapter.getPosition(savedModel);
+                    if (position >= 0) {
+                        spinnerModel.setSelection(position);
+                    }
+                }
+            }
+        }
+
+        // 恢复识别按钮状态
+        String buttonText = savedInstanceState.getString("identifyButtonText");
+        boolean buttonEnabled = savedInstanceState.getBoolean("identifyButtonEnabled", true);
+        if (btnIdentify != null) {
+            if (buttonText != null) {
+                btnIdentify.setText(buttonText);
+            }
+            btnIdentify.setEnabled(buttonEnabled);
+        }
     }
 
     private void initImagePicker() {

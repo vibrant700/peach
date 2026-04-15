@@ -108,7 +108,7 @@
     <!-- 功能按钮网格 - 两行三列，居中对称 -->
     <GridLayout
         android:id="@+id/function_grid"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:layout_marginStart="16dp"
@@ -124,40 +124,52 @@
         <!-- 第一行 -->
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_identify"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_shop"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_community"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
         <!-- 第二行 -->
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_workshop"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_irrigation"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
         <include layout="@layout/item_function_button"
             android:id="@+id/btn_price"
-            android:layout_width="105dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="4dp" />
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill_horizontal"
+            android:layout_margin="6dp" />
 
     </GridLayout>
 

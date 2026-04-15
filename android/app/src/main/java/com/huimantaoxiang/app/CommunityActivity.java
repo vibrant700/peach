@@ -1,5 +1,8 @@
 package com.huimantaoxiang.app;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -17,6 +20,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,11 +44,19 @@ public class CommunityActivity extends AppCompatActivity {
     private List<CommunityPost> postList = new ArrayList<>();
     private CommunityAdapter adapter;
 
+    // SharedPreferences用于持久化保存帖子数据
+    private SharedPreferences prefs;
+    private static final String PREFS_NAME = "community_prefs";
+    private static final String KEY_POSTS = "posts";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_community);
+
+        // 初始化SharedPreferences
+        prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -53,13 +67,182 @@ public class CommunityActivity extends AppCompatActivity {
         // 初始化视图
         initViews();
 
-        // 初始化数据
-        initData();
+        // 加载保存的帖子数据
+        loadPostsFromPrefs();
 
         // 设置事件监听
         setupListeners();
 
+        // 如果没有帖子，添加示例数据
+        if (postList.isEmpty()) {
+            initData();
+        }
+    }
 
+    /**
+     * 处理singleTask模式下新的Intent
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask模式下，Activity实例被复用时会调用此方法
+        // 不需要做任何处理，因为我们希望保持当前状态
+    }
+
+    /**
+     * 从SharedPreferences加载帖子数据
+     */
+    private void loadPostsFromPrefs() {
+        try {
+            String postsJson = prefs.getString(KEY_POSTS, "");
+            if (!postsJson.isEmpty()) {
+                JSONArray jsonArray = new JSONArray(postsJson);
+                postList.clear();
+
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject postObj = jsonArray.getJSONObject(i);
+                    CommunityPost post = new CommunityPost(
+                        postObj.getString("author"),
+                        postObj.getString("time"),
+                        postObj.getString("content"),
+                        postObj.getInt("likeCount"),
+                        postObj.getInt("commentCount")
+                    );
+                    postList.add(post);
+                }
+
+                // 更新适配器
+                if (adapter != null) {
+                    adapter.notifyDataSetChanged();
+                }
+
+                updateStats();
+
+                // 隐藏空状态提示
+                if (!postList.isEmpty() && emptyStateContainer != null) {
+                    emptyStateContainer.setVisibility(View.GONE);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 保存帖子数据到SharedPreferences
+     */
+    private void savePostsToPrefs() {
+        try {
+            JSONArray jsonArray = new JSONArray();
+            for (CommunityPost post : postList) {
+                JSONObject postObj = new JSONObject();
+                postObj.put("author", post.getAuthor());
+                postObj.put("time", post.getTime());
+                postObj.put("content", post.getContent());
+                postObj.put("likeCount", post.getLikeCount());
+                postObj.put("commentCount", post.getCommentCount());
+                jsonArray.put(postObj);
+            }
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(KEY_POSTS, jsonArray.toString());
+            editor.apply();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 保存Activity状态
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // 保存帖子列表数据
+        ArrayList<String> authors = new ArrayList<>();
+        ArrayList<String> times = new ArrayList<>();
+        ArrayList<String> contents = new ArrayList<>();
+        ArrayList<Integer> likes = new ArrayList<>();
+        ArrayList<Integer> comments = new ArrayList<>();
+
+        for (CommunityPost post : postList) {
+            authors.add(post.getAuthor());
+            times.add(post.getTime());
+            contents.add(post.getContent());
+            likes.add(post.getLikeCount());
+            comments.add(post.getCommentCount());
+        }
+
+        outState.putStringArrayList("authors", authors);
+        outState.putStringArrayList("times", times);
+        outState.putStringArrayList("contents", contents);
+        outState.putIntegerArrayList("likes", likes);
+        outState.putIntegerArrayList("comments", comments);
+
+        // 保存输入框内容
+        if (etPostContent != null) {
+            outState.putString("postContent", etPostContent.getText().toString());
+        }
+
+        // 保存空状态
+        outState.putBoolean("isEmptyState", emptyStateContainer != null && emptyStateContainer.getVisibility() == View.VISIBLE);
+    }
+
+    /**
+     * 恢复Activity状态
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    /**
+     * 恢复状态的通用方法
+     */
+    private void restoreState(Bundle savedInstanceState) {
+        // 恢复帖子列表数据
+        ArrayList<String> authors = savedInstanceState.getStringArrayList("authors");
+        ArrayList<String> times = savedInstanceState.getStringArrayList("times");
+        ArrayList<String> contents = savedInstanceState.getStringArrayList("contents");
+        ArrayList<Integer> likes = savedInstanceState.getIntegerArrayList("likes");
+        ArrayList<Integer> comments = savedInstanceState.getIntegerArrayList("comments");
+
+        if (authors != null && times != null && contents != null &&
+            likes != null && comments != null) {
+
+            postList.clear();
+            for (int i = 0; i < authors.size(); i++) {
+                CommunityPost post = new CommunityPost(
+                    authors.get(i),
+                    times.get(i),
+                    contents.get(i),
+                    likes.get(i),
+                    comments.get(i)
+                );
+                postList.add(post);
+            }
+
+            // 更新适配器
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+
+            updateStats();
+        }
+
+        // 恢复输入框内容
+        String postContent = savedInstanceState.getString("postContent", "");
+        if (etPostContent != null) {
+            etPostContent.setText(postContent);
+        }
+
+        // 恢复空状态
+        boolean isEmptyState = savedInstanceState.getBoolean("isEmptyState", false);
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisibility(isEmptyState ? View.VISIBLE : View.GONE);
+        }
     }
 
     /**
@@ -131,6 +314,9 @@ public class CommunityActivity extends AppCompatActivity {
             postList.add(0, newPost);
             adapter.notifyItemInserted(0);
             rvPosts.scrollToPosition(0);
+
+            // 保存到SharedPreferences
+            savePostsToPrefs();
 
             // 清空输入框
             etPostContent.setText("");

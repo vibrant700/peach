@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
                     if (activity != null) {
                         // 跳转到对应的Activity
                         Intent intent = new Intent(MainActivity.this, activity);
+                        // singleTask模式会自动复用已存在的Activity实例
                         startActivity(intent);
                         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                     } else {

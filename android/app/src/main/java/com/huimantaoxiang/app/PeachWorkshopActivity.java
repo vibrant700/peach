@@ -1,5 +1,6 @@
 package com.huimantaoxiang.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -105,6 +106,87 @@ public class PeachWorkshopActivity extends AppCompatActivity {
 
         int initLength = etPrompt.getText() != null ? etPrompt.getText().length() : 0;
         tvPromptCount.setText(initLength + "/500");
+
+        // 恢复保存的状态
+        if (savedInstanceState != null) {
+            restoreState(savedInstanceState);
+        }
+    }
+
+    /**
+     * 处理singleTask模式下新的Intent
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // singleTask模式下，Activity实例被复用时会调用此方法
+        // 不需要做任何处理，因为我们希望保持当前状态
+    }
+
+    /**
+     * 保存Activity状态
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // 保存输入框内容
+        if (etPrompt != null) {
+            outState.putString("prompt", etPrompt.getText().toString());
+        }
+
+        // 保存图片显示状态
+        if (ivResult != null) {
+            outState.putBoolean("hasResult", ivResult.getVisibility() == View.VISIBLE);
+        }
+
+        // 保存加载状态
+        if (progressBar != null) {
+            outState.putBoolean("isLoading", progressBar.getVisibility() == View.VISIBLE);
+        }
+    }
+
+    /**
+     * 恢复Activity状态
+     */
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        restoreState(savedInstanceState);
+    }
+
+    /**
+     * 恢复状态的通用方法
+     */
+    private void restoreState(Bundle savedInstanceState) {
+        // 恢复输入框内容
+        String prompt = savedInstanceState.getString("prompt", "");
+        if (etPrompt != null) {
+            etPrompt.setText(prompt);
+            // 更新字符计数
+            int length = prompt.length();
+            tvPromptCount.setText(length + "/500");
+        }
+
+        // 恢复图片显示状态
+        boolean hasResult = savedInstanceState.getBoolean("hasResult", false);
+        if (hasResult) {
+            tvResultEmpty.setVisibility(View.GONE);
+            ivResult.setVisibility(View.VISIBLE);
+        } else {
+            tvResultEmpty.setVisibility(View.VISIBLE);
+            ivResult.setVisibility(View.GONE);
+        }
+
+        // 恢复加载状态
+        boolean isLoading = savedInstanceState.getBoolean("isLoading", false);
+        if (isLoading) {
+            progressBar.setVisibility(View.VISIBLE);
+            btnGenerate.setEnabled(false);
+        } else {
+            progressBar.setVisibility(View.GONE);
+            btnGenerate.setEnabled(true);
+        }
     }
 
     private void generateImage(String prompt) {

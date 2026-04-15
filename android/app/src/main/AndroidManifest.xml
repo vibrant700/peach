@@ -35,25 +35,31 @@
         <activity
             android:name="com.huimantaoxiang.app.TaobaoAIActivity"
             android:exported="false"
-            android:label="@string/taobao_ai_title" />
+            android:label="@string/taobao_ai_title"
+            android:launchMode="singleTask" />
         <activity
             android:name="com.huimantaoxiang.app.CommunityActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTask" />
         <activity
             android:name="com.huimantaoxiang.app.PeachWorkshopActivity"
             android:exported="false"
-            android:label="桃源工坊" />
+            android:label="桃源工坊"
+            android:launchMode="singleTask" />
         <activity
             android:name=".IdentifyPeachActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask" />
         <activity
             android:name=".WarehouseActivity"
             android:exported="false"
-            android:label="仓库管理" />
+            android:label="仓库管理"
+            android:launchMode="singleTask" />
         <activity
             android:name=".CarbonMarketActivity"
             android:exported="false"
-            android:label="碳汇市场" />
+            android:label="碳汇市场"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>
