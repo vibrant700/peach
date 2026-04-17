@@ -73,4 +73,7 @@
     <string name="register_password_short">密码至少 6 位</string>
     <string name="register_password_not_match">两次密码不一致</string>
     <string name="register_success">注册成功，请登录</string>
+
+    <string name="logout_button">退出登录</string>
+    <string name="logout_success">已退出登录</string>
 </resources>

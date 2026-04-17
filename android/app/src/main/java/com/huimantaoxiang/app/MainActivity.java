@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.bmob.v3.BmobUser;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -25,11 +27,31 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setupLogoutButton();
+
         // 设置功能按钮
         setupFunctionButtons();
 
         // 设置扇形图数据
         setupPieChart();
+    }
+
+    private void setupLogoutButton() {
+        TextView logoutView = findViewById(R.id.tv_logout);
+        if (logoutView == null) {
+            return;
+        }
+        logoutView.setOnClickListener(v -> handleLogout());
+    }
+
+    private void handleLogout() {
+        BmobUser.logOut();
+        Toast.makeText(this, R.string.logout_success, Toast.LENGTH_SHORT).show();
+
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     /**
