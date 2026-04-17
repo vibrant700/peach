@@ -1,0 +1,214 @@
+{
+  "version": "1.0",
+  "updated": "2024-04-18",
+  "varieties": [
+    {
+      "code": "cx_aru",
+      "name": "北京27号",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 12.5,
+        "maturity": 78,
+        "weight": 235,
+        "diameter": 82,
+        "confidence": 95.2,
+        "light_score": 92
+      }
+    },
+    {
+      "code": "wc_bqw",
+      "name": "晚熟白青纹",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 11.5,
+        "maturity": 75,
+        "weight": 220,
+        "diameter": 80,
+        "confidence": 93.0,
+        "light_score": 88
+      }
+    },
+    {
+      "code": "wc_brw",
+      "name": "晚熟红纹",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.0,
+        "maturity": 82,
+        "weight": 240,
+        "diameter": 85,
+        "confidence": 94.5,
+        "light_score": 90
+      }
+    },
+    {
+      "code": "wc_bpv",
+      "name": "晚熟粉紫",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.2,
+        "maturity": 78,
+        "weight": 225,
+        "diameter": 81,
+        "confidence": 92.8,
+        "light_score": 87
+      }
+    },
+    {
+      "code": "z14_crw",
+      "name": "14号深红纹",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.5,
+        "maturity": 85,
+        "weight": 250,
+        "diameter": 87,
+        "confidence": 96.0,
+        "light_score": 93
+      }
+    },
+    {
+      "code": "aoyou_bpw",
+      "name": "油桃粉白纹",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 11.8,
+        "maturity": 76,
+        "weight": 200,
+        "diameter": 75,
+        "confidence": 91.5,
+        "light_score": 85
+      }
+    },
+    {
+      "code": "p2_bpv",
+      "name": "P2粉紫",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 12.8,
+        "maturity": 80,
+        "weight": 230,
+        "diameter": 83,
+        "confidence": 94.2,
+        "light_score": 89
+      }
+    },
+    {
+      "code": "yp_apu",
+      "name": "叶黄红粉底",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.0,
+        "maturity": 77,
+        "weight": 215,
+        "diameter": 79,
+        "confidence": 92.5,
+        "light_score": 86
+      }
+    },
+    {
+      "code": "90peach_crw",
+      "name": "90成熟深红纹",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 14.0,
+        "maturity": 88,
+        "weight": 260,
+        "diameter": 90,
+        "confidence": 97.5,
+        "light_score": 95
+      }
+    },
+    {
+      "code": "90peach_bqv",
+      "name": "90成熟青紫纹",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.8,
+        "maturity": 86,
+        "weight": 255,
+        "diameter": 88,
+        "confidence": 96.8,
+        "light_score": 94
+      }
+    },
+    {
+      "code": "85peach_aqu",
+      "name": "85成熟红青底",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.5,
+        "maturity": 80,
+        "weight": 235,
+        "diameter": 82,
+        "confidence": 93.5,
+        "light_score": 88
+      }
+    },
+    {
+      "code": "85peach_brw",
+      "name": "85成熟红纹",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.3,
+        "maturity": 79,
+        "weight": 228,
+        "diameter": 81,
+        "confidence": 93.0,
+        "light_score": 87
+      }
+    },
+    {
+      "code": "hyp_bpv",
+      "name": "红皮粉紫",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.2,
+        "maturity": 83,
+        "weight": 245,
+        "diameter": 85,
+        "confidence": 95.0,
+        "light_score": 91
+      }
+    },
+    {
+      "code": "hmp_crw",
+      "name": "红肉深红纹",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.6,
+        "maturity": 84,
+        "weight": 250,
+        "diameter": 86,
+        "confidence": 96.2,
+        "light_score": 92
+      }
+    },
+    {
+      "code": "hmo_apu",
+      "name": "红肉橙红粉底",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.9,
+        "maturity": 81,
+        "weight": 238,
+        "diameter": 84,
+        "confidence": 94.8,
+        "light_score": 90
+      }
+    },
+    {
+      "code": "14peach_bqv",
+      "name": "14号桃青紫纹",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.1,
+        "maturity": 78,
+        "weight": 218,
+        "diameter": 80,
+        "confidence": 92.9,
+        "light_score": 86
+      }
+    }
+  ]
+}

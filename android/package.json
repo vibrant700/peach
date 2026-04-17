@@ -1,7 +1,7 @@
 {
   "name": "peach-detection-server",
   "version": "1.0.0",
-  "description": "YOLOv5 Peach Detection Server",
+  "description": "YOLOv11 Peach Detection Server",
   "main": "shibie.js",
   "scripts": {
     "start": "node shibie.js"

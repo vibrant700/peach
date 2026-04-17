@@ -10,8 +10,8 @@ const multer = require('multer');
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
-app.use('/yolov5-master/data/images', express.static('./yolov5-master/data/images'))
-app.use('/yolov5-master/runs', express.static('./yolov5-master/runs'))
+app.use('/yolov11-master/data/images', express.static('./yolov11-master/data/images'))
+app.use('/yolov11-master/runs', express.static('./yolov11-master/runs'))
 
 // 动态获取本机IP地址
 function getLocalIP() {
@@ -32,7 +32,7 @@ console.log("检测到本机IP:", LOCAL_IP);
 let upload = multer({
     storage: multer.diskStorage({
         destination: function (req, file, cb) {
-            cb(null, './yolov5-master/data/images');
+            cb(null, './yolov11-master/data/images');
         },
         filename: function (req, file, cb) {
             var changedName = (file.originalname);
@@ -50,10 +50,10 @@ app.post('/upload', upload.single('file'), function(req, res, next) {
     const path = require("path");
 
     // 使用绝对路径
-    const pythonPath = path.join(__dirname, "yolov5-master", ".venv", "Scripts", "python.exe");
-    const detectScript = path.join(__dirname, "yolov5-master", "detect.py");
-    const weightsPath = path.join(__dirname, "yolov5-master", "best.pt");
-    const sourcePath = path.join(__dirname, "yolov5-master", "data", "images", file.filename);
+    const pythonPath = path.join(__dirname, "yolov11-master", ".venv", "Scripts", "python.exe");
+    const detectScript = path.join(__dirname, "yolov11-master", "detect.py");
+    const weightsPath = path.join(__dirname, "yolov11-master", "best.pt");
+    const sourcePath = path.join(__dirname, "yolov11-master", "data", "images", file.filename);
 
     console.log("Python路径:", pythonPath);
     console.log("检测脚本:", detectScript);
@@ -76,7 +76,7 @@ app.post('/upload', upload.single('file'), function(req, res, next) {
     result.on("close", (code) => {
         console.log("child process exited with code " + code);
         
-        // 解析 YOLOv5 输出，提取识别结果
+        // 解析 YOLOv11 输出，提取识别结果
          // 典型输出: image 1/1 .../upload.jpg: 640x640 1 cx_aru, 568.6ms
          // 或者: image 1/1 .../upload.jpg: 480x640 1 cx_aru, Done. (0.016s)
          
@@ -122,7 +122,7 @@ app.post('/upload', upload.single('file'), function(req, res, next) {
         }
 
         // 动态获取最新生成的 exp 目录
-        const expDirs = fs.readdirSync("./yolov5-master/runs/detect")
+        const expDirs = fs.readdirSync("./yolov11-master/runs/detect")
                           .filter(dir => dir.startsWith("exp"))
                           .sort((a, b) => b.localeCompare(a));
         const latestExp = expDirs[0];
@@ -130,7 +130,7 @@ app.post('/upload', upload.single('file'), function(req, res, next) {
         // 发送完整响应 - 使用动态IP
         res.status(200).json({
             msg: "success",
-            imgs_url: `http://${LOCAL_IP}:8081/yolov5-master/runs/detect/${latestExp}/${file.filename}`,
+            imgs_url: `http://${LOCAL_IP}:8081/yolov11-master/runs/detect/${latestExp}/${file.filename}`,
             messages: detectResult
         });
     });

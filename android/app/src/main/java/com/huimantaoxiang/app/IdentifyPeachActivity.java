@@ -24,6 +24,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.huimantaoxiang.util.PeachDataLoader;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -64,8 +66,75 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     // 服务器配置
     private static final String SERVER_URL = "http://10.0.2.2:8081/upload";
 
-    // 模拟数据
+    // 模拟数据 - 使用模型输出的英文类别代码作为key
     private Map<String, PeachResult> mockResults = new HashMap<>();
+
+    // 类别代码到中文品种名称的映射（根据YOLOv11模型训练时的类别定义）
+    private static final Map<String, String> CATEGORY_TO_VARIETY = new HashMap<>();
+    static {
+        // 晚熟品种系列 (wc_*)
+        CATEGORY_TO_VARIETY.put("wc_bqw", "晚熟白青纹");
+        CATEGORY_TO_VARIETY.put("wc_brw", "晚熟红纹");
+        CATEGORY_TO_VARIETY.put("wc_brv", "晚熟红紫");
+        CATEGORY_TO_VARIETY.put("wc_bpw", "晚熟粉白纹");
+        CATEGORY_TO_VARIETY.put("wc_bqv", "晚熟青紫纹");
+        CATEGORY_TO_VARIETY.put("wc_bpu", "晚熟粉白底");
+        CATEGORY_TO_VARIETY.put("wc_bpv", "晚熟粉紫");
+        CATEGORY_TO_VARIETY.put("wc_apu", "晚熟红粉底");
+        CATEGORY_TO_VARIETY.put("wc_crw", "晚熟深红纹");
+        CATEGORY_TO_VARIETY.put("wc_bqu", "晚熟青紫底");
+        CATEGORY_TO_VARIETY.put("wc_aqu", "晚熟红青底");
+
+        // 知名品种
+        CATEGORY_TO_VARIETY.put("cx_aru", "北京27号");
+
+        // 14号品种系列 (z14_*)
+        CATEGORY_TO_VARIETY.put("z14_bqu", "14号青紫底");
+        CATEGORY_TO_VARIETY.put("z14_brw", "14号红纹");
+        CATEGORY_TO_VARIETY.put("z14_crw", "14号深红纹");
+
+        // 油桃品种
+        CATEGORY_TO_VARIETY.put("aoyou_bpw", "油桃粉白纹");
+
+        // P2品种系列
+        CATEGORY_TO_VARIETY.put("p2_bpv", "P2粉紫");
+        CATEGORY_TO_VARIETY.put("p2_apu", "P2红粉底");
+        CATEGORY_TO_VARIETY.put("p2_bpu", "P2粉白底");
+
+        // 叶黄品种系列 (yp_*)
+        CATEGORY_TO_VARIETY.put("yp_bqv", "叶黄青紫纹");
+        CATEGORY_TO_VARIETY.put("yp_apu", "叶黄红粉底");
+        CATEGORY_TO_VARIETY.put("yp_apv", "叶黄红粉紫");
+
+        // 90成熟度桃系列 (90peach_*)
+        CATEGORY_TO_VARIETY.put("90peach_bqv", "90成熟青紫纹");
+        CATEGORY_TO_VARIETY.put("90peach_crw", "90成熟深红纹");
+        CATEGORY_TO_VARIETY.put("90peach_brv", "90成熟红紫");
+        CATEGORY_TO_VARIETY.put("90peach_brw", "90成熟红纹");
+        CATEGORY_TO_VARIETY.put("90peach_aqv", "90成熟红青紫");
+        CATEGORY_TO_VARIETY.put("90peach_aqu", "90成熟红青底");
+
+        // 85成熟度桃系列 (85peach_*)
+        CATEGORY_TO_VARIETY.put("85peach_apv", "85成熟红粉紫");
+        CATEGORY_TO_VARIETY.put("85peach_bqv", "85成熟青紫纹");
+        CATEGORY_TO_VARIETY.put("85peach_crw", "85成熟深红纹");
+        CATEGORY_TO_VARIETY.put("85peach_aqu", "85成熟红青底");
+        CATEGORY_TO_VARIETY.put("85peach_brw", "85成熟红纹");
+
+        // 红皮品种系列 (hyp_*)
+        CATEGORY_TO_VARIETY.put("hyp_bpv", "红皮粉紫");
+        CATEGORY_TO_VARIETY.put("hyp_bpu", "红皮粉白底");
+
+        // 红肉品种系列 (hmp_*, hmo_*)
+        CATEGORY_TO_VARIETY.put("hmp_bpv", "红肉粉紫");
+        CATEGORY_TO_VARIETY.put("hmp_crw", "红肉深红纹");
+        CATEGORY_TO_VARIETY.put("hmo_apu", "红肉橙红粉底");
+        CATEGORY_TO_VARIETY.put("hmp_bqv", "红肉青紫纹");
+
+        // 14号桃系列 (14peach_*)
+        CATEGORY_TO_VARIETY.put("14peach_bqw", "14号桃白青纹");
+        CATEGORY_TO_VARIETY.put("14peach_bqv", "14号桃青紫纹");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -259,9 +328,24 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     }
 
     private void initMockData() {
-        mockResults.put("北京27号", new PeachResult("北京27号", "特级果", 12.5f, 78, 235, 82, 95.2f, 92));
-        mockResults.put("春蜜", new PeachResult("春蜜", "一级果", 11.8f, 82, 210, 78, 93.5f, 88));
-        mockResults.put("白风", new PeachResult("白风", "特级果", 13.2f, 85, 245, 84, 96.8f, 94));
+        java.util.Map<String, PeachDataLoader.PeachParams> paramsData =
+            PeachDataLoader.loadPeachParams(this);
+
+        for (PeachDataLoader.PeachParams params : paramsData.values()) {
+            PeachResult result = new PeachResult(
+                params.name,
+                params.grade,
+                params.sweetness,
+                params.maturity,
+                params.weight,
+                params.diameter,
+                params.confidence,
+                params.lightScore
+            );
+            mockResults.put(params.code, result);
+        }
+
+        Log.d("IdentifyPeach", "从配置文件加载了" + mockResults.size() + "个品种数据");
     }
 
     private void setupListeners() {
@@ -347,6 +431,13 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                     // 解析识别结果（从 messages 中提取）
                     String detectedClass = extractDetectedClass(messages);
 
+                    // 🔍 调试信息：显示实际识别的类别代码
+                    android.util.Log.d("IdentifyPeach", "========== 识别结果调试 ==========");
+                    android.util.Log.d("IdentifyPeach", "原始messages: " + messages);
+                    android.util.Log.d("IdentifyPeach", "解析后类别代码: " + detectedClass);
+                    android.util.Log.d("IdentifyPeach", "结果图片URL: " + imageUrl);
+                    android.util.Log.d("IdentifyPeach", "================================");
+
                     // 在主线程更新UI
                     runOnUiThread(() -> {
                         hideLoading();
@@ -362,30 +453,56 @@ public class IdentifyPeachActivity extends AppCompatActivity {
                         emptyStateContainer.setVisibility(View.GONE);
                         scrollResults.setVisibility(View.VISIBLE);
 
-                        // 1. 尝试匹配模拟数据（精确或模糊）
+                        // 1. 尝试匹配模拟数据（使用英文类别代码）
+                        android.util.Log.d("IdentifyPeach", "模型识别类别代码: " + detectedClass);
                         PeachResult match = mockResults.get(detectedClass);
+
+                        // 2. 如果直接匹配失败，尝试通过映射表转换后匹配
+                        if (match == null) {
+                            String chineseVariety = CATEGORY_TO_VARIETY.get(detectedClass);
+                            android.util.Log.d("IdentifyPeach", "映射尝试: " + detectedClass + " -> " + chineseVariety);
+                            if (chineseVariety != null) {
+                                // 查找是否有对应中文名称的数据
+                                for (PeachResult result : mockResults.values()) {
+                                    if (result.variety.equals(chineseVariety)) {
+                                        match = result;
+                                        android.util.Log.d("IdentifyPeach", "通过映射找到匹配: " + chineseVariety);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // 3. 如果还是找不到，尝试模糊匹配（处理特殊情况）
                         if (match == null) {
                             for (String key : mockResults.keySet()) {
-                                if (detectedClass.contains(key)) {
+                                if (detectedClass.contains(key) || key.contains(detectedClass)) {
                                     match = mockResults.get(key);
                                     break;
                                 }
                             }
                         }
 
-                        // 2. 如果未找到匹配项，使用默认模拟数据（如"北京27号"）作为模板
+                        // 4. 如果未找到匹配项，使用默认模拟数据作为模板
                         if (match == null && !mockResults.isEmpty()) {
-                            match = mockResults.get("北京27号");
+                            match = mockResults.get("cx_aru");  // 使用第一个品种作为默认
                             if (match == null) {
                                 match = mockResults.values().iterator().next();
                             }
                         }
 
                         if (match != null) {
-                            // 3. 构造最终显示结果：
-                            // - 品种名称：使用实际识别出的 detectedClass
+                            // 5. 构造最终显示结果：
+                            // - 品种名称：优先使用映射后的中文名称，如果映射失败则使用原始类别代码
                             // - 其他参数：使用模拟数据的参数
-                            String finalVariety = (detectedClass != null && !detectedClass.isEmpty()) ? detectedClass : match.variety;
+                            String finalVariety;
+                            if (detectedClass != null && !detectedClass.isEmpty()) {
+                                // 尝试将英文类别代码映射为中文名称
+                                String mappedVariety = CATEGORY_TO_VARIETY.get(detectedClass);
+                                finalVariety = (mappedVariety != null) ? mappedVariety : match.variety;
+                            } else {
+                                finalVariety = match.variety;
+                            }
                             
                             PeachResult finalResult = new PeachResult(
                                     finalVariety,

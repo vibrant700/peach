@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const imagesDir = './yolov5-master/data/images';
+const imagesDir = './yolov11-master/data/images';
 
 // 获取所有图片文件
 const imageFiles = fs.readdirSync(imagesDir).filter(file =>
