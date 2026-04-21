@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class PeachDataLoader {
     private static final String TAG = "PeachDataLoader";
-    private static final String DATA_FILE = ".cache/app_config.json";
+    private static final String DATA_FILE = "app_config.json";
 
     private static Map<String, PeachParams> cachedData = null;
 

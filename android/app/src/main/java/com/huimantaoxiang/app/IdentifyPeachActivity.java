@@ -1,15 +1,18 @@
 package com.huimantaoxiang.app;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import java.io.InputStream;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -62,78 +65,22 @@ public class IdentifyPeachActivity extends AppCompatActivity {
     private Bitmap resultImage;        // 新增：识别结果图片
     private String selectedModel = "YOLOv11标准模型";
     private ActivityResultLauncher<PickVisualMediaRequest> pickMediaLauncher;
+    private AlertDialog dialog;
 
     // 服务器配置
-    private static final String SERVER_URL = "http://10.0.2.2:8081/upload";
+    private static final String SERVER_URL = "https://foyer-freestyle-ditzy.ngrok-free.dev/upload";
 
     // 模拟数据 - 使用模型输出的英文类别代码作为key
     private Map<String, PeachResult> mockResults = new HashMap<>();
 
-    // 类别代码到中文品种名称的映射（根据YOLOv11模型训练时的类别定义）
+    // 类别代码到中文品种名称的映射（根据5-best.pt模型的实际类别）
     private static final Map<String, String> CATEGORY_TO_VARIETY = new HashMap<>();
     static {
-        // 晚熟品种系列 (wc_*)
-        CATEGORY_TO_VARIETY.put("wc_bqw", "晚熟白青纹");
-        CATEGORY_TO_VARIETY.put("wc_brw", "晚熟红纹");
-        CATEGORY_TO_VARIETY.put("wc_brv", "晚熟红紫");
-        CATEGORY_TO_VARIETY.put("wc_bpw", "晚熟粉白纹");
-        CATEGORY_TO_VARIETY.put("wc_bqv", "晚熟青紫纹");
-        CATEGORY_TO_VARIETY.put("wc_bpu", "晚熟粉白底");
-        CATEGORY_TO_VARIETY.put("wc_bpv", "晚熟粉紫");
-        CATEGORY_TO_VARIETY.put("wc_apu", "晚熟红粉底");
-        CATEGORY_TO_VARIETY.put("wc_crw", "晚熟深红纹");
-        CATEGORY_TO_VARIETY.put("wc_bqu", "晚熟青紫底");
-        CATEGORY_TO_VARIETY.put("wc_aqu", "晚熟红青底");
-
-        // 知名品种
-        CATEGORY_TO_VARIETY.put("cx_aru", "北京27号");
-
-        // 14号品种系列 (z14_*)
-        CATEGORY_TO_VARIETY.put("z14_bqu", "14号青紫底");
-        CATEGORY_TO_VARIETY.put("z14_brw", "14号红纹");
-        CATEGORY_TO_VARIETY.put("z14_crw", "14号深红纹");
-
-        // 油桃品种
-        CATEGORY_TO_VARIETY.put("aoyou_bpw", "油桃粉白纹");
-
-        // P2品种系列
-        CATEGORY_TO_VARIETY.put("p2_bpv", "P2粉紫");
-        CATEGORY_TO_VARIETY.put("p2_apu", "P2红粉底");
-        CATEGORY_TO_VARIETY.put("p2_bpu", "P2粉白底");
-
-        // 叶黄品种系列 (yp_*)
-        CATEGORY_TO_VARIETY.put("yp_bqv", "叶黄青紫纹");
-        CATEGORY_TO_VARIETY.put("yp_apu", "叶黄红粉底");
-        CATEGORY_TO_VARIETY.put("yp_apv", "叶黄红粉紫");
-
-        // 90成熟度桃系列 (90peach_*)
-        CATEGORY_TO_VARIETY.put("90peach_bqv", "90成熟青紫纹");
-        CATEGORY_TO_VARIETY.put("90peach_crw", "90成熟深红纹");
-        CATEGORY_TO_VARIETY.put("90peach_brv", "90成熟红紫");
-        CATEGORY_TO_VARIETY.put("90peach_brw", "90成熟红纹");
-        CATEGORY_TO_VARIETY.put("90peach_aqv", "90成熟红青紫");
-        CATEGORY_TO_VARIETY.put("90peach_aqu", "90成熟红青底");
-
-        // 85成熟度桃系列 (85peach_*)
-        CATEGORY_TO_VARIETY.put("85peach_apv", "85成熟红粉紫");
-        CATEGORY_TO_VARIETY.put("85peach_bqv", "85成熟青紫纹");
-        CATEGORY_TO_VARIETY.put("85peach_crw", "85成熟深红纹");
-        CATEGORY_TO_VARIETY.put("85peach_aqu", "85成熟红青底");
-        CATEGORY_TO_VARIETY.put("85peach_brw", "85成熟红纹");
-
-        // 红皮品种系列 (hyp_*)
-        CATEGORY_TO_VARIETY.put("hyp_bpv", "红皮粉紫");
-        CATEGORY_TO_VARIETY.put("hyp_bpu", "红皮粉白底");
-
-        // 红肉品种系列 (hmp_*, hmo_*)
-        CATEGORY_TO_VARIETY.put("hmp_bpv", "红肉粉紫");
-        CATEGORY_TO_VARIETY.put("hmp_crw", "红肉深红纹");
-        CATEGORY_TO_VARIETY.put("hmo_apu", "红肉橙红粉底");
-        CATEGORY_TO_VARIETY.put("hmp_bqv", "红肉青紫纹");
-
-        // 14号桃系列 (14peach_*)
-        CATEGORY_TO_VARIETY.put("14peach_bqw", "14号桃白青纹");
-        CATEGORY_TO_VARIETY.put("14peach_bqv", "14号桃青紫纹");
+        // 5-best.pt模型实际识别的4个桃子品种
+        CATEGORY_TO_VARIETY.put("chunxue", "春雪");
+        CATEGORY_TO_VARIETY.put("huangpantao", "黄蟠桃");
+        CATEGORY_TO_VARIETY.put("wangchun", "晚春");
+        CATEGORY_TO_VARIETY.put("ruipan", "瑞蟠");
     }
 
     @Override
@@ -258,6 +205,52 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         );
     }
 
+    private void showTestImagePicker() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("选择测试图片");
+
+        GridLayout gridLayout = new GridLayout(this);
+        gridLayout.setColumnCount(2);
+        gridLayout.setPadding(40, 20, 40, 20);
+
+        int[] imageIds = {
+            R.drawable.test_peach_1,
+            R.drawable.test_peach_2,
+            R.drawable.test_peach_3,
+            R.drawable.test_peach_4
+        };
+
+        String[] imageNames = {"测试图片 1", "测试图片 2", "测试图片 3", "测试图片 4"};
+
+        for (int i = 0; i < imageIds.length; i++) {
+            final int index = i;
+            ImageView imageView = new ImageView(this);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = 0;
+            params.height = 300;
+            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            params.setMargins(10, 10, 10, 10);
+            imageView.setLayoutParams(params);
+            imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            imageView.setImageResource(imageIds[i]);
+            imageView.setOnClickListener(v -> {
+                Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imageIds[index]);
+                selectedImage = bitmap;
+                ivPreview.setImageBitmap(bitmap);
+                ivPreview.setAlpha(1.0f);
+                if (dialog != null && dialog.isShowing()) {
+                    dialog.dismiss();
+                }
+                Toast.makeText(this, "已选择: " + imageNames[index], Toast.LENGTH_SHORT).show();
+            });
+            gridLayout.addView(imageView);
+        }
+
+        builder.setView(gridLayout);
+        dialog = builder.create();
+        dialog.show();
+    }
+
     private void loadSelectedImage(Uri uri) {
         try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
             if (inputStream == null) {
@@ -355,17 +348,7 @@ public class IdentifyPeachActivity extends AppCompatActivity {
         }
 
         if (btnUpload != null) {
-            btnUpload.setOnClickListener(v -> {
-                if (pickMediaLauncher == null) {
-                    Toast.makeText(this, "图片选择器未初始化", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                pickMediaLauncher.launch(
-                        new PickVisualMediaRequest.Builder()
-                                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                                .build()
-                );
-            });
+            btnUpload.setOnClickListener(v -> showTestImagePicker());
         }
 
         // 识别按钮 - 添加空值检查
@@ -417,16 +400,15 @@ public class IdentifyPeachActivity extends AppCompatActivity {
 
                 // 获取识别结果的图片URL
                 String imageUrl = jsonResponse.optString("imgs_url", "");
-                // 修复模拟器无法访问宿主机IP的问题：如果服务器返回的是局域网IP，替换为10.0.2.2
-                if (!imageUrl.isEmpty()) {
-                     imageUrl = imageUrl.replaceAll("http://[^:]+:8081", "http://10.0.2.2:8081");
-                }
+                // 使用公网IP，不需要替换IP地址
+                // imageUrl = imageUrl.replaceAll("http://[^:]+:8081", "http://10.0.2.2:8081");
                 String messages = jsonResponse.optString("messages", "");
 
                 // 下载识别结果图片
                 if (!imageUrl.isEmpty()) {
                     updateLoadingHint("正在下载结果...");
-                    resultImage = downloadImage(imageUrl);
+                    String imageUrlWithTimestamp = imageUrl + "?t=" + System.currentTimeMillis();
+                    resultImage = downloadImage(imageUrlWithTimestamp);
 
                     // 解析识别结果（从 messages 中提取）
                     String detectedClass = extractDetectedClass(messages);

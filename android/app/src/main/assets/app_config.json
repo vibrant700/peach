@@ -1,0 +1,68 @@
+{
+  "version": "2.0",
+  "updated": "2026-04-17",
+  "model_info": {
+    "model_file": "5-best.pt",
+    "model_name": "YOLOv11桃子品种识别模型",
+    "total_classes": 4,
+    "classes": ["chunxue", "huangpantao", "wangchun", "ruipan"]
+  },
+  "varieties": [
+    {
+      "code": "chunxue",
+      "name": "春雪",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 12.5,
+        "maturity": 78,
+        "weight": 235,
+        "diameter": 82,
+        "confidence": 95.2,
+        "light_score": 92
+      },
+      "description": "早熟品种，果实大，品质优"
+    },
+    {
+      "code": "huangpantao",
+      "name": "黄蟠桃",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 11.8,
+        "maturity": 82,
+        "weight": 210,
+        "diameter": 78,
+        "confidence": 93.5,
+        "light_score": 88
+      },
+      "description": "中熟品种，口感甜，耐储运"
+    },
+    {
+      "code": "wangchun",
+      "name": "晚春",
+      "params": {
+        "grade": "特级果",
+        "sweetness": 13.2,
+        "maturity": 85,
+        "weight": 245,
+        "diameter": 84,
+        "confidence": 96.8,
+        "light_score": 94
+      },
+      "description": "中晚熟品种，风味浓，品质优"
+    },
+    {
+      "code": "ruipan",
+      "name": "瑞蟠",
+      "params": {
+        "grade": "一级果",
+        "sweetness": 12.0,
+        "maturity": 80,
+        "weight": 220,
+        "diameter": 80,
+        "confidence": 94.0,
+        "light_score": 90
+      },
+      "description": "中熟品种，肉质细，风味甜"
+    }
+  ]
+}
