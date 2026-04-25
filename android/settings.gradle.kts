@@ -26,5 +26,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "智桃科研"
+rootProject.name = "科智桃研"
 include(":app")
